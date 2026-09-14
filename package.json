@@ -21,10 +21,10 @@
     "choreography",
     "data-visualization"
   ],
-  "homepage": "https://dmuldrew.github.io/d3_audio/",
+  "homepage": "https://dmuldrew.github.io/d3-audio/",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dmuldrew/d3_audio.git"
+    "url": "git+https://github.com/dmuldrew/d3-audio.git"
   },
   "author": "Daniel Muldrew",
   "license": "MIT",

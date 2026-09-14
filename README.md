@@ -3,8 +3,8 @@
 > **Audio-Visual Data Sonification and Rhythmic Choreography for D3.js and Tone.js**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-2ea44f?style=flat&logo=github)](https://dmuldrew.github.io/d3_audio/)
-[![Tests](https://img.shields.io/badge/tests-130%20passed-brightgreen.svg)](#-unit-tests--verification)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-2ea44f?style=flat&logo=github)](https://dmuldrew.github.io/d3-audio/)
+[![Tests](https://img.shields.io/badge/tests-148%20passed-brightgreen.svg)](#-unit-tests--verification)
 [![Docker](https://img.shields.io/badge/docker-ready-2496ed.svg)](#-running-with-docker)
 [![D3 Compatible](https://img.shields.io/badge/D3-v7%2B-F9A03C.svg)](https://d3js.org/)
 [![Tone.js](https://img.shields.io/badge/Tone.js-v14%2B-black.svg)](https://tonejs.github.io/)
@@ -15,7 +15,7 @@ Think of a hospital heart monitor beeping in tempo with a pulse, a car's parking
 
 `d3-audio` brings this power to web data visualization. Just as tools like **D3.js** turn numbers into bar heights, circles, and line graphs on your screen, `d3-audio` translates those same numbers into musical notes, rhythms, volume, and stereo sound—while keeping on-screen animations moving in perfect lockstep with the audio.
 
-> 🌐 **Live Interactive Showcase**: Experience the full suite of **21 interactive sonification applications** running live in your browser at **[https://dmuldrew.github.io/d3_audio/](https://dmuldrew.github.io/d3_audio/)**!
+> 🌐 **Live Interactive Showcase**: Experience the full suite of **21 interactive sonification applications** running live in your browser at **[https://dmuldrew.github.io/d3-audio/](https://dmuldrew.github.io/d3-audio/)**!
 
 ---
 
@@ -430,7 +430,7 @@ The repository includes **21 interactive applications** demonstrating different 
 
 ### 🌐 Live Deployment on GitHub Pages
 The entire interactive demo gallery and documentation is hosted live at:
-👉 **[https://dmuldrew.github.io/d3_audio/](https://dmuldrew.github.io/d3_audio/)**
+👉 **[https://dmuldrew.github.io/d3-audio/](https://dmuldrew.github.io/d3-audio/)**
 
 * **Automated CI/CD**: A GitHub Actions workflow (`.github/workflows/deploy-pages.yml`) publishes the site automatically on every push to `main`.
 * **Zero Configuration**: Static hosting ready with `.nojekyll` and modular relative imports.
@@ -444,28 +444,28 @@ Or open [http://localhost:3000](http://localhost:3000) in your browser.
 
 | Demo | Live Web App | Source Code | Description |
 |---|---|---|---|
-| **Overview Hub** | [Launch Hub ➔](https://dmuldrew.github.io/d3_audio/) | [`index.html`](index.html) | Interactive launchpad with live sound nodes and feature cards. |
-| **01. Data Sonifier & Chart** | [Launch Demo ➔](https://dmuldrew.github.io/d3_audio/examples/01-data-sonification/) | [`examples/01-data-sonification/`](examples/01-data-sonification/) | Multi-variable scatter & bar chart with pitch, stereo pan, duration scaling, and synchronized visual playhead tracking. |
-| **02. 24-Hour Circadian Pulse** | [Launch Demo ➔](https://dmuldrew.github.io/d3_audio/examples/02-categorical-timeseries/) | [`examples/02-categorical-timeseries/`](examples/02-categorical-timeseries/) | 24-hour time-series categorical sonification mapping daily human activities to evolving rhythmic drum patterns, circadian energy pitch, and adaptive tempo. |
-| **03. Continuous Stream & Sweeps** | [Launch Demo ➔](https://dmuldrew.github.io/d3_audio/examples/03-continuous-stream/) | [`examples/03-continuous-stream/`](examples/03-continuous-stream/) | Live time-series stream with audio filter frequency sweeps, spatial stereo audio, and responsive particle dynamics. |
-| **04. Scaler & Choreography Playground** | [Launch Demo ➔](https://dmuldrew.github.io/d3_audio/examples/04-playground/) | [`examples/04-playground/`](examples/04-playground/) | Interactive workbench to test scale modes, movement presets, and copy live generated D3 code. |
-| **05. Radial Sunburst & Cyclic Radar** | [Launch Demo ➔](https://dmuldrew.github.io/d3_audio/examples/05-radial-sunburst/) | [`examples/05-radial-sunburst/`](examples/05-radial-sunburst/) | Multi-tier radial partition chart with rotating radar needle triggering cyclic arpeggios, octave tiers, and kinetic radial pulses. |
-| **06. Force Network & Graph Sonifier** | [Launch Demo ➔](https://dmuldrew.github.io/d3_audio/examples/06-network-graph/) | [`examples/06-network-graph/`](examples/06-network-graph/) | D3 Force physics network graph where node degree maps to harmonic pitch, drag-and-release plucks strings, and impulses traverse edges polyphonically. |
-| **07. Geographic Map & Spatial 2D Audio** | [Launch Demo ➔](https://dmuldrew.github.io/d3_audio/examples/07-geographic-map/) | [`examples/07-geographic-map/`](examples/07-geographic-map/) | World map sonifying longitude as stereo panning [-1, +1] and latitude as pitch register, with animated flight route tour and bouncing city beacons. |
-| **08. Streamgraph & Harmonic Chord Voicer** | [Launch Demo ➔](https://dmuldrew.github.io/d3_audio/examples/08-streamgraph/) | [`examples/08-streamgraph/`](examples/08-streamgraph/) | Stacked area streamgraph of energy sources where each undulating layer is an independent harmonic voice playing 5-note polyphonic chords. |
-| **09. Treemap & Hierarchical Market** | [Launch Demo ➔](https://dmuldrew.github.io/d3_audio/examples/09-treemap-matrix/) | [`examples/09-treemap-matrix/`](examples/09-treemap-matrix/) | Multi-sector stock market treemap mapping market cap to duration/gain and performance (+/-) to Major vs Minor modes with automated tile scanning. |
-| **10. Circular Chord Diagram & Flows** | [Launch Demo ➔](https://dmuldrew.github.io/d3_audio/examples/10-chord-diagram/) | [`examples/10-chord-diagram/`](examples/10-chord-diagram/) | Directional bilateral matrix flows connecting regions with dual-note chord intervals, spatial angular panning, and shockwave ribbon ripples. |
-| **11. Ridgeline Joyplot Topography** | [Launch Demo ➔](https://dmuldrew.github.io/d3_audio/examples/11-ridgeline-joyplot/) | [`examples/11-ridgeline-joyplot/`](examples/11-ridgeline-joyplot/) | Topographic probability distributions scanning pitch frequencies and filter cutoffs while curves vibrate dynamically like resonant strings. |
-| **12. Particle Flow Field Swarm** | [Launch Demo ➔](https://dmuldrew.github.io/d3_audio/examples/12-particle-flowfield/) | [`examples/12-particle-flowfield/`](examples/12-particle-flowfield/) | 200+ autonomous particles flowing through a vector curl field with interactive vortex attractors generating ambient polyphonic soundscapes. |
-| **13. Seismic Simon Earthquake Game** | [Launch Demo ➔](https://dmuldrew.github.io/d3_audio/examples/13-pie-simon-earthquake/) | [`examples/13-pie-simon-earthquake/`](examples/13-pie-simon-earthquake/) | Educational "Simon Says" memory game using real USGS earthquake data where pie slices sonify tectonic depth and magnitude with shockwave ripples. |
-| **14. Exoplanet Orbit & Doppler Symphony** | [Launch Demo ➔](https://dmuldrew.github.io/d3_audio/examples/14-exoplanet-doppler/) | [`examples/14-exoplanet-doppler/`](examples/14-exoplanet-doppler/) | NASA Kepler & TRAPPIST-1 orbital physics lab where Kepler's 3rd law generates orbital frequencies, transit chimes, and Doppler stereo panning. |
-| **15. Climate Spiral & Carbon Quest** | [Launch Demo ➔](https://dmuldrew.github.io/d3_audio/examples/15-climate-rhythm-quest/) | [`examples/15-climate-rhythm-quest/`](examples/15-climate-rhythm-quest/) | NASA temperature anomaly spiral (1880–2026) sonifying global warming as harmonic tension and policy scenarios as equilibrium resolution. |
-| **16. Galton Board & Plinko Statistics** | [Launch Demo ➔](https://dmuldrew.github.io/d3_audio/examples/16-galton-board-plinko/) | [`examples/16-galton-board-plinko/`](examples/16-galton-board-plinko/) | Interactive Central Limit Theorem pinball where binomial random drops play acoustic marimba chimes and accumulate into a singing Gaussian bell curve. |
-| **17. Protein & DNA Folding Sonifier** | [Launch Demo ➔](https://dmuldrew.github.io/d3_audio/examples/17-protein-dna-sonifier/) | [`examples/17-protein-dna-sonifier/`](examples/17-protein-dna-sonifier/) | Macromolecular ribbon folding with 20 amino acid categorical timbres, Kyte-Doolittle hydropathy spatial panning, and interactive audio legend. |
-| **18. Categorical Ecosystem Food Web** | [Launch Demo ➔](https://dmuldrew.github.io/d3_audio/examples/18-ecosystem-taxonomy/) | [`examples/18-ecosystem-taxonomy/`](examples/18-ecosystem-taxonomy/) | Categorical trophic level timbres (Producers, Herbivores, Carnivores, Apex, Decomposers), biome modes, and IUCN conservation risk tension scaling. |
-| **19. The Sound of Sorting Algorithms** | [Launch Demo ➔](https://dmuldrew.github.io/d3_audio/examples/19-sound-of-sorting/) | [`examples/19-sound-of-sorting/`](examples/19-sound-of-sorting/) | Auditory computer science laboratory sonifying Quicksort, Mergesort, Radix Sort LSD, Bubble Sort, and Insertion Sort with stereo memory array panning (citing Timo Bingmann's *The Sound of Sorting*, 2013). |
-| **20. Advanced Scalers & Multivariate Sound Lab** | [Launch Demo ➔](https://dmuldrew.github.io/d3_audio/examples/20-advanced-scalers/) | [`examples/20-advanced-scalers/`](examples/20-advanced-scalers/) | Interactive testbed for statistical confidence bit-crushing (16➔2b), 3D spatial room reverb, network latency feedback echo, and multivariate harmonic triad voicings. |
-| **21. Euclidean Polyrhythms & Groove Engine** | [Launch Demo ➔](https://dmuldrew.github.io/d3_audio/examples/21-euclidean-rhythms/) | [`examples/21-euclidean-rhythms/`](examples/21-euclidean-rhythms/) | Bjorklund algorithm polyrhythm visualizer with rotating concentric clockwork radar, multi-track server load sonification, and authentic world rhythm presets. |
+| **Overview Hub** | [Launch Hub ➔](https://dmuldrew.github.io/d3-audio/) | [`index.html`](index.html) | Interactive launchpad with live sound nodes and feature cards. |
+| **01. Data Sonifier & Chart** | [Launch Demo ➔](https://dmuldrew.github.io/d3-audio/examples/01-data-sonification/) | [`examples/01-data-sonification/`](examples/01-data-sonification/) | Multi-variable scatter & bar chart with pitch, stereo pan, duration scaling, and synchronized visual playhead tracking. |
+| **02. 24-Hour Circadian Pulse** | [Launch Demo ➔](https://dmuldrew.github.io/d3-audio/examples/02-categorical-timeseries/) | [`examples/02-categorical-timeseries/`](examples/02-categorical-timeseries/) | 24-hour time-series categorical sonification mapping daily human activities to evolving rhythmic drum patterns, circadian energy pitch, and adaptive tempo. |
+| **03. Continuous Stream & Sweeps** | [Launch Demo ➔](https://dmuldrew.github.io/d3-audio/examples/03-continuous-stream/) | [`examples/03-continuous-stream/`](examples/03-continuous-stream/) | Live time-series stream with audio filter frequency sweeps, spatial stereo audio, and responsive particle dynamics. |
+| **04. Scaler & Choreography Playground** | [Launch Demo ➔](https://dmuldrew.github.io/d3-audio/examples/04-playground/) | [`examples/04-playground/`](examples/04-playground/) | Interactive workbench to test scale modes, movement presets, and copy live generated D3 code. |
+| **05. Radial Sunburst & Cyclic Radar** | [Launch Demo ➔](https://dmuldrew.github.io/d3-audio/examples/05-radial-sunburst/) | [`examples/05-radial-sunburst/`](examples/05-radial-sunburst/) | Multi-tier radial partition chart with rotating radar needle triggering cyclic arpeggios, octave tiers, and kinetic radial pulses. |
+| **06. Force Network & Graph Sonifier** | [Launch Demo ➔](https://dmuldrew.github.io/d3-audio/examples/06-network-graph/) | [`examples/06-network-graph/`](examples/06-network-graph/) | D3 Force physics network graph where node degree maps to harmonic pitch, drag-and-release plucks strings, and impulses traverse edges polyphonically. |
+| **07. Geographic Map & Spatial 2D Audio** | [Launch Demo ➔](https://dmuldrew.github.io/d3-audio/examples/07-geographic-map/) | [`examples/07-geographic-map/`](examples/07-geographic-map/) | World map sonifying longitude as stereo panning [-1, +1] and latitude as pitch register, with animated flight route tour and bouncing city beacons. |
+| **08. Streamgraph & Harmonic Chord Voicer** | [Launch Demo ➔](https://dmuldrew.github.io/d3-audio/examples/08-streamgraph/) | [`examples/08-streamgraph/`](examples/08-streamgraph/) | Stacked area streamgraph of energy sources where each undulating layer is an independent harmonic voice playing 5-note polyphonic chords. |
+| **09. Treemap & Hierarchical Market** | [Launch Demo ➔](https://dmuldrew.github.io/d3-audio/examples/09-treemap-matrix/) | [`examples/09-treemap-matrix/`](examples/09-treemap-matrix/) | Multi-sector stock market treemap mapping market cap to duration/gain and performance (+/-) to Major vs Minor modes with automated tile scanning. |
+| **10. Circular Chord Diagram & Flows** | [Launch Demo ➔](https://dmuldrew.github.io/d3-audio/examples/10-chord-diagram/) | [`examples/10-chord-diagram/`](examples/10-chord-diagram/) | Directional bilateral matrix flows connecting regions with dual-note chord intervals, spatial angular panning, and shockwave ribbon ripples. |
+| **11. Ridgeline Joyplot Topography** | [Launch Demo ➔](https://dmuldrew.github.io/d3-audio/examples/11-ridgeline-joyplot/) | [`examples/11-ridgeline-joyplot/`](examples/11-ridgeline-joyplot/) | Topographic probability distributions scanning pitch frequencies and filter cutoffs while curves vibrate dynamically like resonant strings. |
+| **12. Particle Flow Field Swarm** | [Launch Demo ➔](https://dmuldrew.github.io/d3-audio/examples/12-particle-flowfield/) | [`examples/12-particle-flowfield/`](examples/12-particle-flowfield/) | 200+ autonomous particles flowing through a vector curl field with interactive vortex attractors generating ambient polyphonic soundscapes. |
+| **13. Seismic Simon Earthquake Game** | [Launch Demo ➔](https://dmuldrew.github.io/d3-audio/examples/13-pie-simon-earthquake/) | [`examples/13-pie-simon-earthquake/`](examples/13-pie-simon-earthquake/) | Educational "Simon Says" memory game using real USGS earthquake data where pie slices sonify tectonic depth and magnitude with shockwave ripples. |
+| **14. Exoplanet Orbit & Doppler Symphony** | [Launch Demo ➔](https://dmuldrew.github.io/d3-audio/examples/14-exoplanet-doppler/) | [`examples/14-exoplanet-doppler/`](examples/14-exoplanet-doppler/) | NASA Kepler & TRAPPIST-1 orbital physics lab where Kepler's 3rd law generates orbital frequencies, transit chimes, and Doppler stereo panning. |
+| **15. Climate Spiral & Carbon Quest** | [Launch Demo ➔](https://dmuldrew.github.io/d3-audio/examples/15-climate-rhythm-quest/) | [`examples/15-climate-rhythm-quest/`](examples/15-climate-rhythm-quest/) | NASA temperature anomaly spiral (1880–2026) sonifying global warming as harmonic tension and policy scenarios as equilibrium resolution. |
+| **16. Galton Board & Plinko Statistics** | [Launch Demo ➔](https://dmuldrew.github.io/d3-audio/examples/16-galton-board-plinko/) | [`examples/16-galton-board-plinko/`](examples/16-galton-board-plinko/) | Interactive Central Limit Theorem pinball where binomial random drops play acoustic marimba chimes and accumulate into a singing Gaussian bell curve. |
+| **17. Protein & DNA Folding Sonifier** | [Launch Demo ➔](https://dmuldrew.github.io/d3-audio/examples/17-protein-dna-sonifier/) | [`examples/17-protein-dna-sonifier/`](examples/17-protein-dna-sonifier/) | Macromolecular ribbon folding with 20 amino acid categorical timbres, Kyte-Doolittle hydropathy spatial panning, and interactive audio legend. |
+| **18. Categorical Ecosystem Food Web** | [Launch Demo ➔](https://dmuldrew.github.io/d3-audio/examples/18-ecosystem-taxonomy/) | [`examples/18-ecosystem-taxonomy/`](examples/18-ecosystem-taxonomy/) | Categorical trophic level timbres (Producers, Herbivores, Carnivores, Apex, Decomposers), biome modes, and IUCN conservation risk tension scaling. |
+| **19. The Sound of Sorting Algorithms** | [Launch Demo ➔](https://dmuldrew.github.io/d3-audio/examples/19-sound-of-sorting/) | [`examples/19-sound-of-sorting/`](examples/19-sound-of-sorting/) | Auditory computer science laboratory sonifying Quicksort, Mergesort, Radix Sort LSD, Bubble Sort, and Insertion Sort with stereo memory array panning (citing Timo Bingmann's *The Sound of Sorting*, 2013). |
+| **20. Advanced Scalers & Multivariate Sound Lab** | [Launch Demo ➔](https://dmuldrew.github.io/d3-audio/examples/20-advanced-scalers/) | [`examples/20-advanced-scalers/`](examples/20-advanced-scalers/) | Interactive testbed for statistical confidence bit-crushing (16➔2b), 3D spatial room reverb, network latency feedback echo, and multivariate harmonic triad voicings. |
+| **21. Euclidean Polyrhythms & Groove Engine** | [Launch Demo ➔](https://dmuldrew.github.io/d3-audio/examples/21-euclidean-rhythms/) | [`examples/21-euclidean-rhythms/`](examples/21-euclidean-rhythms/) | Bjorklund algorithm polyrhythm visualizer with rotating concentric clockwork radar, multi-track server load sonification, and authentic world rhythm presets. |
 
 ---
 
@@ -1229,7 +1229,7 @@ Then visit **http://localhost:3000** in your browser.
 ## 📁 Repository Structure
 
 ```
-d3_audio/
+d3-audio/
 ├── index.html                     # Master showcase hub & interactive live preview
 ├── package.json                   # Module metadata & scripts
 ├── Dockerfile                     # Docker container configuration
