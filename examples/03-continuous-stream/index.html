@@ -3,19 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>03. Continuous Stream & Audio Sweeps | d3-audio</title>
+  <title>03. Continuous Sound & Parameter Mapping Sonifier (PMSon) | d3-audio</title>
   <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <script src="../../dist/d3-audio.js"></script>
   <style>
     :root {
-      --bg: #070d18;
-      --card: #10192a;
+      --bg: #060b17;
+      --card: #0c1527;
+      --card-inner: rgba(255, 255, 255, 0.03);
       --accent: #38bdf8;
       --accent2: #06b6d4;
+      --gold: #fbbf24;
+      --green: #10b981;
+      --rose: #f43f5e;
       --text: #f8fafc;
       --muted: #94a3b8;
-      --border: rgba(56, 189, 248, 0.2);
+      --border: rgba(56, 189, 248, 0.22);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -25,14 +29,16 @@
       padding: 1.5rem;
       min-height: 100vh;
     }
-    .container { max-width: 1100px; margin: 0 auto; }
+    .container { max-width: 1140px; margin: 0 auto; }
     header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 1.5rem;
+      margin-bottom: 1.25rem;
       border-bottom: 1px solid var(--border);
       padding-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 1rem;
     }
     .nav-link { color: var(--accent); text-decoration: none; font-size: 0.9rem; }
     .nav-link:hover { text-decoration: underline; }
@@ -45,31 +51,54 @@
       margin-bottom: 1.5rem;
     }
 
+    .controls-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+      background: rgba(14, 25, 45, 0.65);
+      border: 1px solid var(--border);
+      padding: 0.85rem 1.25rem;
+      border-radius: 10px;
+    }
+    .controls-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
     .canvas-container {
       width: 100%;
-      height: 380px;
+      height: 400px;
       position: relative;
-      background: #040811;
-      border-radius: 8px;
+      background: #03060f;
+      border-radius: 10px;
       overflow: hidden;
-      border: 1px solid rgba(255,255,255,0.06);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      box-shadow: inset 0 0 35px rgba(6, 182, 212, 0.08);
+      cursor: crosshair;
     }
 
     .telemetry-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
       gap: 1rem;
-      margin-top: 1rem;
+      margin-top: 1.25rem;
     }
     .metric-card {
-      background: rgba(255,255,255,0.03);
+      background: var(--card-inner);
       border: 1px solid var(--border);
       border-radius: 8px;
       padding: 1rem;
       text-align: center;
+      transition: border-color 0.2s;
     }
-    .metric-val { font-size: 1.6rem; font-weight: 800; color: var(--accent); font-family: monospace; }
-    .metric-lbl { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; margin-top: 0.3rem; }
+    .metric-card:hover { border-color: var(--accent); }
+    .metric-val { font-size: 1.65rem; font-weight: 800; color: var(--accent); font-family: monospace; }
+    .metric-lbl { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; margin-top: 0.35rem; font-weight: 600; letter-spacing: 0.05em; }
 
     .btn {
       background: var(--accent);
@@ -79,8 +108,79 @@
       border-radius: 6px;
       font-weight: 700;
       cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.9rem;
+      transition: all 0.2s;
     }
-    .btn:hover { background: #7dd3fc; }
+    .btn:hover { background: #7dd3fc; transform: translateY(-1px); }
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.14);
+      border-color: var(--accent);
+    }
+    .btn.active {
+      background: var(--accent);
+      color: #030712;
+      border-color: var(--accent);
+    }
+
+    .toggle-pill {
+      display: inline-flex;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 20px;
+      padding: 3px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .toggle-pill button {
+      background: none;
+      border: none;
+      color: var(--muted);
+      padding: 0.35rem 0.85rem;
+      border-radius: 16px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .toggle-pill button.active {
+      background: var(--accent);
+      color: #030712;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+    }
+
+    select {
+      background: #0d1a30;
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 0.45rem 0.8rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      outline: none;
+      cursor: pointer;
+    }
+    select:focus { border-color: var(--accent); }
+
+    .crosshair-hud {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(4, 9, 18, 0.8);
+      backdrop-filter: blur(6px);
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: 0.75rem;
+      color: var(--muted);
+      pointer-events: none;
+      display: flex;
+      gap: 12px;
+    }
   </style>
 </head>
 <body>
@@ -88,66 +188,113 @@
     <header>
       <div>
         <a href="../../index.html" class="nav-link">← Back to Overview</a>
-        <h1 style="font-size: 1.8rem; margin-top: 0.3rem;">03. Continuous Stream & Audio Sweeps</h1>
+        <h1 style="font-size: 1.8rem; margin-top: 0.3rem;">03. Continuous Sound & Parameter Mapping Sonifier (PMSon)</h1>
+        <p style="color: var(--muted); font-size: 0.88rem; margin-top: 0.25rem;">
+          Unbroken microtonal glissando audio streams, dynamic resonant filter sweeps, spatial 2D vector modulation, and instantaneous derivative modulation.
+        </p>
       </div>
       <div style="display: flex; gap: 0.75rem; align-items: center;">
-        <button id="btn-audio-activate" class="btn-enable-audio" style="background: #f59e0b; color: #030712; font-weight: 800; border: none; padding: 0.4rem 0.85rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.35rem; transition: background 0.2s;">🔊 Enable Audio</button>
-        <button id="stream-toggle-btn" class="btn">▶ Start Live Stream</button>
+        <button id="btn-audio-activate" class="btn-enable-audio" style="background: #f59e0b; color: #030712; font-weight: 800; border: none; padding: 0.45rem 0.9rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.35rem;">🔊 Enable Audio</button>
+        <button id="stream-toggle-btn" class="btn">▶ Start Continuous Sound</button>
       </div>
     </header>
 
     <div class="panel">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-        <h3 style="font-size: 1.1rem;">Real-time Dynamic Sonification with Filter & Spatial Pan</h3>
-        <span style="font-size: 0.85rem; color: var(--muted);">Click and drag inside canvas to modulate stream stream vector</span>
+      <!-- Interactive Controls Bar -->
+      <div class="controls-bar">
+        <div class="controls-group">
+          <label style="font-size: 0.82rem; font-weight: 700; color: var(--muted); text-transform: uppercase;">Sound Mode:</label>
+          <div class="toggle-pill" id="sound-mode-toggle">
+            <button id="mode-continuous" class="active">〰️ Continuous Glissando</button>
+            <button id="mode-discrete">🎹 Discrete Notes</button>
+          </div>
+        </div>
+
+        <div class="controls-group">
+          <label style="font-size: 0.82rem; font-weight: 700; color: var(--muted); text-transform: uppercase;">Interactive Space:</label>
+          <div class="toggle-pill" id="visual-mode-toggle">
+            <button id="vmode-stream" class="active">🌊 Live Wave Stream</button>
+            <button id="vmode-theremin">🎛️ Theremin 2D Pad</button>
+            <button id="vmode-laser">🔬 Laser Curve Scan</button>
+          </div>
+        </div>
+
+        <div class="controls-group" id="dataset-group">
+          <label style="font-size: 0.82rem; font-weight: 700; color: var(--muted); text-transform: uppercase;">Stream Profile:</label>
+          <select id="signal-select">
+            <option value="ocean">🌊 Oceanic Thermocline (Smooth Gradient)</option>
+            <option value="seismic">⚡ Seismic Tremor (Fault Ruptures)</option>
+            <option value="eeg">🧠 EEG Brainwave (Alpha & Theta Swell)</option>
+          </select>
+        </div>
       </div>
 
-      <div class="canvas-container" id="chart-area"></div>
+      <!-- Main Canvas -->
+      <div class="canvas-container" id="chart-area">
+        <div class="crosshair-hud" id="hud-overlay">
+          <span>Y: <strong id="hud-y" style="color: var(--gold);">440.0 Hz</strong></span>
+          <span>X: <strong id="hud-x" style="color: var(--accent);">0.00 Pan</strong></span>
+          <span>Mode: <strong id="hud-mode" style="color: var(--green);">Continuous</strong></span>
+        </div>
+      </div>
 
+      <!-- Real-Time Continuous Telemetry HUD -->
       <div class="telemetry-grid">
         <div class="metric-card">
-          <div class="metric-val" id="val-stream">0.00</div>
-          <div class="metric-lbl">Signal Amplitude</div>
+          <div class="metric-val" id="val-pitch" style="color: var(--gold);">440.0 Hz</div>
+          <div class="metric-lbl">Continuous Frequency (Hz)</div>
         </div>
         <div class="metric-card">
-          <div class="metric-val" id="val-filter">1,200 Hz</div>
-          <div class="metric-lbl">scaleFilter Cutoff</div>
+          <div class="metric-val" id="val-filter" style="color: var(--accent);">2,400 Hz</div>
+          <div class="metric-lbl">Resonant Cutoff ($Q=4$)</div>
         </div>
         <div class="metric-card">
-          <div class="metric-val" id="val-pitch">C4</div>
-          <div class="metric-lbl">scalePitch Note</div>
+          <div class="metric-val" id="val-pan" style="color: #a78bfa;">0.00 C</div>
+          <div class="metric-lbl">Continuous Stereo Pan</div>
         </div>
         <div class="metric-card">
-          <div class="metric-val" id="val-pan">0.00</div>
-          <div class="metric-lbl">scalePan Stereo</div>
+          <div class="metric-val" id="val-derivative" style="color: var(--rose);">0.00</div>
+          <div class="metric-lbl">Gradient Derivative (dy/dt)</div>
         </div>
       </div>
 
+      <!-- Audio Legend Mount -->
+      <div id="legend-mount" style="margin-top: 1.25rem;"></div>
+
       <!-- How to Interpret the Audiovisual Results -->
-      <div style="background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; margin-top: 1.25rem;">
-        <h3 style="font-size: 1rem; color: var(--accent); margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.4rem;">
+      <div style="background: rgba(14, 25, 45, 0.4); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; margin-top: 1.5rem;">
+        <h3 style="font-size: 1.05rem; color: var(--accent); margin-bottom: 0.9rem; display: flex; align-items: center; gap: 0.4rem;">
           <span>🎧</span> How to Interpret the Audiovisual Results
         </h3>
-        <ul style="list-style: none; padding: 0; font-size: 0.82rem; color: var(--text); line-height: 1.6;">
-          <li style="margin-bottom: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.06);">
-            <div style="font-weight: 700; color: #facc15;">📈 Continuous Wave Amplitude ➔ Fluid Pitch Sweep</div>
-            <p style="color: var(--muted); margin-top: 0.25rem;">
-              Unlike discrete quantized notes, this continuous synthesizer glides smoothly along the incoming signal stream. High positive wave crests soar into bright treble pitches, while negative wave troughs dive into deep sub-bass vibrations.
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem;">
+          <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 0.9rem;">
+            <div style="font-weight: 700; color: var(--gold); margin-bottom: 0.35rem;">〰️ Unbroken Microtonal Glissando</div>
+            <p style="font-size: 0.8rem; color: var(--muted); line-height: 1.55;">
+              Unlike discrete musical scales that jump in stepped semitones, this continuous oscillator glides seamlessly through decimal Hertz ($80.0\text{ Hz} \leftrightarrow 1,200.0\text{ Hz}$). Every micro-variation in elevation is audible without boundary artifacts.
             </p>
-          </li>
-          <li style="margin-bottom: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.06);">
-            <div style="font-weight: 700; color: #38bdf8;">🔊 Rate of Change / Slope ➔ Filter Cutoff Frequency</div>
-            <p style="color: var(--muted); margin-top: 0.25rem;">
-              The first derivative (signal velocity) modulates an active lowpass filter via <code>scaleFilter</code>. Gradual rolling trends sound warm and muted ($1,200\text{ Hz}$), whereas sudden spikes and volatile turbulence rip open the filter cutoff to $8,000\text{--}12,000\text{ Hz}$.
+          </div>
+
+          <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 0.9rem;">
+            <div style="font-weight: 700; color: var(--accent); margin-bottom: 0.35rem;">🎛️ Continuous Resonant Filter Sweeps</div>
+            <p style="font-size: 0.8rem; color: var(--muted); line-height: 1.55;">
+              A 24dB/octave resonant lowpass filter sweeps continuously between $200\text{ Hz}$ (deep submerged warmth) and $14,000\text{ Hz}$ (high-frequency luminescence). Filter sweep width conveys physical depth and medium density.
             </p>
-          </li>
-          <li>
-            <div style="font-weight: 700; color: #10b981;">🖱️ Interactive Vector Dragging ➔ Spatial Stereo Panning</div>
-            <p style="color: var(--muted); margin-top: 0.25rem;">
-              Clicking and dragging inside the canvas steers the vector origin: the $X$-coordinate pans the audio between your left and right ears (<code>scalePan</code>), giving an immediate spatial sensation of data trajectory in real time.
+          </div>
+
+          <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 0.9rem;">
+            <div style="font-weight: 700; color: #a78bfa; margin-bottom: 0.35rem;">🧭 Spatial Vector Stereo Panning</div>
+            <p style="font-size: 0.8rem; color: var(--muted); line-height: 1.55;">
+              Stereo panning glides between $-1.0$ (Full Left) and $+1.0$ (Full Right) in real time. In Theremin and Laser Scan modes, your auditory space tracks the physical lateral position across the screen with sub-millisecond accuracy.
             </p>
-          </li>
-        </ul>
+          </div>
+
+          <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 0.9rem;">
+            <div style="font-weight: 700; color: var(--rose); margin-bottom: 0.35rem;">⚡ Instantaneous Derivative ($\frac{dy}{dt}$) Modulation</div>
+            <p style="font-size: 0.8rem; color: var(--muted); line-height: 1.55;">
+              Rapid rate-of-change (spikes, fault shifts, sudden gradient reversals) directly modulates the FM harmonicity and vibrato depth. Smooth trends sound pure, while volatile shocks sound buzzy and energized.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   </div>
