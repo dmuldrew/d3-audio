@@ -21,90 +21,135 @@ const REGION_COORDS = {
   5: { lon: 85.0, lat: 28.0 }    // Himalayan Belt
 };
 
-// Precise geological tectonic fault traces for the 6 primary regions
+// Precise geological tectonic fault traces for the 6 primary regions (Multi-Segment Fault Systems)
 const FAULT_TRACES = [
   {
     id: 0,
-    name: "Japan Trench",
+    name: "Japan Trench & East Asia Arc",
     regionId: 0,
     color: "#f43f5e",
     coords: [
-      [162.0, 53.0], [158.0, 50.5], [153.0, 47.5], [148.0, 44.5],
-      [145.0, 41.5], [143.8, 39.0], [143.0, 37.0], [142.0, 35.0],
-      [140.8, 33.0], [140.5, 30.5], [141.0, 27.0]
+      // 1. Kuril-Kamchatka Trench (Kamchatka through Kurils to Hokkaido)
+      [[163.0, 56.5], [160.0, 53.5], [156.0, 49.5], [151.0, 46.0], [147.0, 43.5], [144.5, 41.5]],
+      // 2. Japan Trench & Izu-Bonin-Mariana Trench (Tohoku, Kanto, Izu Arc)
+      [[144.5, 41.5], [143.8, 39.0], [143.0, 37.0], [141.8, 35.0], [140.8, 32.5], [141.0, 27.5], [142.5, 22.0], [144.5, 17.0], [145.5, 12.0]],
+      // 3. Nankai Trough, Ryukyu Arc & Taiwan (Sagami, Nankai, Okinawa Trough, Taiwan, Manila Trench)
+      [[139.0, 35.0], [136.5, 33.3], [134.0, 32.2], [131.5, 30.5], [128.5, 28.0], [125.5, 25.5], [123.0, 24.2], [121.8, 23.8], [120.8, 21.8], [119.8, 17.0]],
+      // 4. Eastern Margin of Sea of Japan & Noto Peninsula (2024 Noto reverse fault system)
+      [[141.5, 46.5], [140.0, 43.0], [139.0, 40.0], [137.0, 37.5], [134.0, 36.0]]
     ]
   },
   {
     id: 1,
-    name: "Peru-Chile Trench",
+    name: "Peru-Chile Trench & South America Arc",
     regionId: 1,
     color: "#ec4899",
     coords: [
-      [-80.5, 2.0], [-81.5, -2.0], [-81.0, -5.5], [-79.5, -9.5],
-      [-76.0, -14.0], [-73.0, -18.0], [-71.5, -22.0], [-71.3, -26.0],
-      [-71.8, -31.0], [-72.5, -35.0], [-74.0, -40.0], [-75.5, -45.0], [-76.0, -50.0]
+      // 1. Peru-Chile Megathrust (Colombia to Southern Chile & Magallanes)
+      [[-78.0, 6.0], [-79.5, 1.5], [-81.2, -4.5], [-80.5, -9.0], [-76.5, -14.0], [-73.0, -18.0], [-71.5, -22.0], [-71.2, -27.0], [-72.0, -32.5], [-73.5, -37.0], [-75.0, -42.0], [-76.0, -46.5], [-75.5, -50.0], [-73.0, -53.0], [-68.0, -55.0]],
+      // 2. Middle America Trench (Mexico, Guatemala, Costa Rica, Panama)
+      [[-106.0, 20.0], [-102.5, 17.5], [-97.5, 15.5], [-93.0, 14.0], [-87.5, 11.5], [-83.5, 8.5], [-81.0, 7.5], [-77.5, 6.5]],
+      // 3. Scotia Arc & South Sandwich Trench
+      [[-65.0, -55.0], [-52.0, -54.0], [-38.0, -55.0], [-26.0, -56.5], [-26.5, -60.0], [-36.0, -61.0], [-55.0, -61.0]]
     ]
   },
   {
     id: 2,
-    name: "Cascadia Megathrust",
+    name: "Cascadia & Alaska-Aleutian Megathrust",
     regionId: 2,
     color: "#38bdf8",
     coords: [
-      [-128.5, 51.0], [-127.8, 49.5], [-126.8, 48.3], [-125.6, 47.0],
-      [-125.0, 45.2], [-124.7, 43.5], [-124.5, 41.8], [-124.3, 40.3]
+      // 1. Cascadia Megathrust (Cape Mendocino, Oregon, Washington, Vancouver Island)
+      [[-124.3, 40.3], [-124.7, 43.5], [-125.4, 46.8], [-126.8, 48.5], [-128.5, 50.8]],
+      // 2. Queen Charlotte - Fairweather Fault System (British Columbia / SE Alaska)
+      [[-128.5, 50.8], [-131.0, 52.8], [-133.8, 55.0], [-136.5, 57.5], [-139.0, 59.5]],
+      // 3. Alaska Subduction Megathrust (Yakutat, Prince William Sound, Cook Inlet, Kodiak, Alaska Peninsula)
+      [[-139.0, 59.5], [-144.0, 60.0], [-148.0, 60.0], [-151.0, 59.0], [-154.0, 57.5], [-158.0, 55.5], [-162.0, 54.5]],
+      // 4. Aleutian Subduction Trench (Fox Islands, Andreanof, Rat, Near Islands to Kamchatka juncture)
+      [[-162.0, 54.5], [-167.0, 53.0], [-173.0, 51.5], [-179.0, 51.0], [176.0, 51.5], [171.0, 52.5], [165.0, 54.0], [162.0, 55.0]],
+      // 5. Denali & Alaska Range Fault Arc
+      [[-137.0, 60.5], [-143.0, 62.0], [-149.0, 63.3], [-153.0, 63.0], [-157.0, 61.5]]
     ]
   },
   {
     id: 3,
-    name: "Sunda Megathrust",
+    name: "Sunda Megathrust & SW Pacific Ring",
     regionId: 3,
     color: "#a855f7",
     coords: [
-      [93.5, 14.5], [94.0, 11.0], [94.5, 7.0], [96.0, 3.5],
-      [98.5, 0.5], [101.5, -2.8], [104.5, -5.8], [108.5, -8.5],
-      [113.5, -10.0], [118.5, -10.8], [123.0, -10.8], [127.0, -9.5]
+      // 1. Sunda-Java-Banda Trench (Andaman, Nicobar, Sumatra, Java, Bali, Timor, Banda Arc)
+      [[93.5, 14.5], [94.0, 10.5], [95.0, 6.0], [97.5, 1.5], [101.0, -2.5], [105.0, -6.5], [110.0, -9.0], [115.5, -9.8], [122.0, -10.2], [128.0, -8.5], [131.5, -5.5], [131.0, -3.5]],
+      // 2. Great Sumatran Fault (active strike-slip spine)
+      [[95.3, 5.5], [97.0, 3.0], [99.0, 0.5], [101.5, -1.8], [103.5, -4.0], [105.0, -5.8]],
+      // 3. Philippine Trench & Molucca Sea (Halmahera, Mindanao, Leyte, Samar, Luzon)
+      [[126.5, 1.0], [127.0, 4.0], [126.5, 7.5], [126.0, 11.0], [124.0, 15.5], [122.5, 18.5]],
+      // 4. New Guinea & Melanesia Trench (Papua New Guinea, New Britain, Solomons, Vanuatu / New Hebrides)
+      [[134.0, -1.5], [140.0, -3.0], [146.0, -4.5], [152.0, -5.5], [156.0, -7.5], [161.0, -10.5], [166.0, -13.5], [168.5, -17.5], [170.0, -21.5]],
+      // 5. Tonga-Kermadec-Hikurangi Trench & New Zealand Alpine Fault
+      [[-173.5, -15.0], [-175.5, -21.0], [-177.0, -28.0], [-178.5, -34.0], [178.5, -38.0], [175.5, -41.5], [171.0, -43.5], [166.0, -46.5]]
     ]
   },
   {
     id: 4,
-    name: "San Andreas Fault",
+    name: "San Andreas & Western North America Faults",
     regionId: 4,
     color: "#f59e0b",
     coords: [
-      [-124.3, 40.3], [-123.7, 39.0], [-122.9, 38.2], [-122.4, 37.7],
-      [-121.7, 37.1], [-120.9, 36.4], [-120.1, 35.8], [-119.3, 35.0],
-      [-118.0, 34.4], [-116.8, 33.9], [-115.8, 33.2], [-115.0, 32.5], [-114.2, 31.5]
+      // 1. San Andreas Fault (Mendocino, SF Bay, Central Coast, Mojave, San Bernardino, Salton Sea, Imperial)
+      [[-124.5, 40.4], [-123.8, 39.0], [-122.9, 38.1], [-122.4, 37.6], [-121.7, 37.0], [-120.5, 36.0], [-119.5, 35.0], [-118.0, 34.4], [-116.8, 33.9], [-115.8, 33.3], [-115.2, 32.7], [-114.8, 32.0]],
+      // 2. Gulf of California Spreading Rifts & Baja California
+      [[-114.8, 32.0], [-114.0, 31.0], [-113.0, 29.5], [-111.5, 27.5], [-110.0, 25.5], [-108.5, 23.5], [-107.0, 21.0]],
+      // 3. Eastern California Shear Zone & Walker Lane (Ridgecrest, Owens Valley, Nevada, Reno)
+      [[-118.5, 34.8], [-117.6, 35.7], [-118.0, 36.8], [-118.4, 38.0], [-119.5, 39.5], [-120.2, 41.0]],
+      // 4. Mendocino Fracture Zone & Gorda Ridge
+      [[-124.5, 40.4], [-126.0, 40.3], [-128.5, 40.3], [-129.5, 41.5]]
     ]
   },
   {
     id: 5,
-    name: "Main Himalayan Thrust",
+    name: "Himalayan Thrust & Alpide Collision Belt",
     regionId: 5,
     color: "#10b981",
     coords: [
-      [73.0, 35.5], [75.5, 34.2], [78.0, 32.2], [80.5, 30.2],
-      [83.5, 28.8], [86.5, 28.0], [89.5, 27.4], [92.5, 27.5],
-      [95.5, 28.3], [97.5, 29.5]
+      // 1. Main Himalayan Frontal Thrust Arc (Pamir, Kashmir, Nepal, Bhutan, Assam)
+      [[70.0, 36.5], [74.0, 34.5], [77.5, 31.8], [81.5, 29.5], [85.5, 27.8], [89.5, 27.2], [93.5, 27.8], [97.0, 28.5]],
+      // 2. Tibetan Plateau Faults & Longmenshan Fault (Sichuan/Wenchuan)
+      [[85.0, 34.5], [92.0, 35.5], [98.5, 33.5], [103.5, 31.5], [105.0, 32.5]],
+      // 3. Sagaing Fault & Indo-Burman Ranges (Myanmar)
+      [[97.0, 28.5], [95.5, 25.0], [95.8, 22.0], [96.2, 18.0], [96.5, 14.5]],
+      // 4. Zagros Mountains Fold-Thrust Belt & Makran (Iran / Pakistan / Afghanistan)
+      [[45.0, 38.0], [48.5, 35.0], [51.5, 30.5], [56.0, 27.5], [62.0, 25.5], [66.5, 29.5], [70.0, 34.0]],
+      // 5. North & East Anatolian Faults & Hellenic Arc (Turkey / Greece / Mediterranean)
+      [[20.0, 37.5], [25.0, 39.0], [29.5, 40.8], [35.5, 40.3], [41.0, 39.5], [37.5, 37.5]]
     ]
   }
 ];
 
-// Connecting major planetary plate boundaries
+// Connecting major planetary plate boundaries (Global Tectonic Grid)
 const GLOBAL_PLATE_BOUNDARIES = [
+  // Mid-Atlantic Ridge
   { name: "Mid-Atlantic Ridge", coords: [[-28, 80], [-19, 65], [-29, 45], [-42, 25], [-35, 0], [-18, -25], [-14, -50], [0, -60]] },
+  // East Pacific Rise
   { name: "East Pacific Rise", coords: [[-110, -55], [-112, -40], [-111, -20], [-105, 0], [-104, 10], [-107, 20]] },
-  { name: "Aleutian Trench", coords: [[165, 55], [-175, 52], [-160, 54], [-145, 58], [-135, 58]] },
-  { name: "Alpine-Zagros Belt", coords: [[-10, 36], [0, 37], [15, 38], [25, 38], [36, 38], [48, 38], [60, 35]] },
-  { name: "Tonga-Kermadec Trench", coords: [[-175, -15], [-175, -25], [-177, -35], [-178, -45]] }
+  // Pacific-Antarctic Ridge
+  { name: "Pacific-Antarctic Ridge", coords: [[-110, -55], [-125, -58], [-145, -62], [-165, -64], [175, -63]] },
+  // Indian Ocean Ridges
+  { name: "Southwest Indian Ridge", coords: [[20, -53], [35, -45], [45, -38], [55, -35], [70, -25]] },
+  { name: "Southeast Indian Ridge", coords: [[70, -25], [85, -34], [105, -45], [125, -50], [140, -52], [160, -55]] },
+  { name: "Central Indian Ridge", coords: [[70, -25], [67, -10], [63, 5], [58, 14], [43, 12]] },
+  // Red Sea & East African Rift
+  { name: "Red Sea & Afar Rift", coords: [[43, 12], [40, 18], [35, 25], [33, 29]] },
+  { name: "East African Rift", coords: [[40, 10], [36, 0], [34, -10], [35, -18]] },
+  // Caribbean Plate Boundary
+  { name: "Caribbean Plate Boundary", coords: [[-85, 16], [-75, 18], [-68, 19], [-63, 17], [-60, 11], [-65, 10], [-73, 10]] }
 ];
 
 let regions = [
   {
     id: 0,
     name: "Japan Trench",
-    subtitle: "Pacific / East Asia",
-    plate: "Pacific subducting under Okhotsk Plate",
+    subtitle: "NW Pacific / Japan & Taiwan Arc",
+    plate: "Pacific & Philippine Sea under Okhotsk / Eurasia",
     type: "Subduction Megathrust",
     color: "#f43f5e",
     defaultDepthKm: 29,
@@ -118,8 +163,8 @@ let regions = [
   {
     id: 1,
     name: "Chile Trench",
-    subtitle: "Nazca / South America",
-    plate: "Nazca subducting under South American Plate",
+    subtitle: "South & Central America Arc",
+    plate: "Nazca & Cocos under South America",
     type: "Megathrust Subduction",
     color: "#ec4899",
     defaultDepthKm: 33,
@@ -133,8 +178,8 @@ let regions = [
   {
     id: 2,
     name: "Cascadia Zone",
-    subtitle: "Pacific NW / Cascadia",
-    plate: "Juan de Fuca under North America",
+    subtitle: "Pacific NW / Alaska / Aleutians",
+    plate: "Juan de Fuca & Pacific under North America",
     type: "Locked Megathrust",
     color: "#38bdf8",
     defaultDepthKm: 25,
@@ -148,8 +193,8 @@ let regions = [
   {
     id: 3,
     name: "Sunda Megathrust",
-    subtitle: "Sumatra / SE Asia",
-    plate: "Indo-Australian under Burma / Sunda Plate",
+    subtitle: "SE Asia & SW Pacific (Ring of Fire)",
+    plate: "Indo-Australian & Pacific under Sunda / Burma / Philippine",
     type: "Subduction Megathrust",
     color: "#a855f7",
     defaultDepthKm: 30,
@@ -163,7 +208,7 @@ let regions = [
   {
     id: 4,
     name: "San Andreas",
-    subtitle: "California / Transform",
+    subtitle: "California & Western NA Faults",
     plate: "Pacific sliding alongside North America",
     type: "Strike-Slip Transform Fault",
     color: "#f59e0b",
@@ -178,8 +223,8 @@ let regions = [
   {
     id: 5,
     name: "Himalayan Belt",
-    subtitle: "Central / South Asia",
-    plate: "Indian colliding into Eurasian Plate",
+    subtitle: "Central / South Asia & Alpide Belt",
+    plate: "Indian & Arabian Plates colliding into Eurasia",
     type: "Continental Collision Thrust",
     color: "#10b981",
     defaultDepthKm: 15,
@@ -749,25 +794,28 @@ function renderRegionalFaults() {
   activeRuptureGroup.selectAll('*').remove();
 
   FAULT_TRACES.forEach(fault => {
-    const geo = { type: "LineString", coordinates: fault.coords };
+    const isMulti = Array.isArray(fault.coords[0]) && Array.isArray(fault.coords[0][0]);
+    const geo = isMulti
+      ? { type: "MultiLineString", coordinates: fault.coords }
+      : { type: "LineString", coordinates: fault.coords };
     const pathStr = geoPath(geo);
     if (!pathStr) return;
 
     const isActive = fault.id === currentEpicenter.regionId;
 
-    // Draw tectonic fault line
+    // Draw tectonic fault line network
     regionalFaultsGroup.append('path')
       .attr('class', `regional-fault fault-${fault.id} ${isActive ? 'active-fault' : ''}`)
       .attr('d', pathStr)
       .attr('fill', 'none')
       .attr('stroke', fault.color)
-      .attr('stroke-width', isActive ? 3.8 : 2.0)
+      .attr('stroke-width', isActive ? 3.5 : 1.8)
       .attr('stroke-linecap', 'round')
       .attr('stroke-linejoin', 'round')
-      .attr('opacity', isActive ? 1.0 : 0.6)
+      .attr('opacity', isActive ? 1.0 : 0.55)
       .attr('filter', isActive ? 'url(#epicenter-glow)' : null);
 
-    // If active region, render glowing rupture flash line and text label
+    // If active region, render glowing rupture flash line across the entire fault network
     if (isActive) {
       activeRuptureGroup.append('path')
         .attr('class', 'rupture-pulse-line')
@@ -778,21 +826,31 @@ function renderRegionalFaults() {
         .attr('stroke-linecap', 'round')
         .attr('stroke-linejoin', 'round');
 
-      // Place fault label near the midpoint
-      const midCoord = fault.coords[Math.floor(fault.coords.length / 2)];
-      if (isPointVisibleOnGlobe(midCoord[0], midCoord[1])) {
-        const pt = projection(midCoord);
-        if (pt) {
-          activeRuptureGroup.append('text')
-            .attr('class', 'fault-tag-label')
-            .attr('x', pt[0] + 6)
-            .attr('y', pt[1] - 6)
-            .attr('fill', fault.color)
-            .attr('font-size', '8.5px')
-            .attr('font-weight', '800')
-            .attr('filter', 'drop-shadow(0 1px 3px rgba(0,0,0,0.9))')
-            .text(`⚡ ${fault.name}`);
+      // Place fault label near current epicenter if visible, or visible segment midpoint
+      let labelPt = null;
+      if (isPointVisibleOnGlobe(currentEpicenter.lon, currentEpicenter.lat)) {
+        labelPt = projection([currentEpicenter.lon, currentEpicenter.lat]);
+      } else {
+        const segments = isMulti ? fault.coords : [fault.coords];
+        for (const seg of segments) {
+          const mid = seg[Math.floor(seg.length / 2)];
+          if (isPointVisibleOnGlobe(mid[0], mid[1])) {
+            labelPt = projection(mid);
+            break;
+          }
         }
+      }
+
+      if (labelPt) {
+        activeRuptureGroup.append('text')
+          .attr('class', 'fault-tag-label')
+          .attr('x', labelPt[0] + 6)
+          .attr('y', labelPt[1] - 8)
+          .attr('fill', fault.color)
+          .attr('font-size', '8.5px')
+          .attr('font-weight', '800')
+          .attr('filter', 'drop-shadow(0 1px 3px rgba(0,0,0,0.9))')
+          .text(`⚡ ${fault.name}`);
       }
     }
   });
