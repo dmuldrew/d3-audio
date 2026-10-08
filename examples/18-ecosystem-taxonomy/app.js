@@ -10,7 +10,9 @@ import {
   createSamplePlayer
 } from '../../src/index.js';
 
-// Ecosystem Taxonomy Datasets
+// ============================================================================
+// 1. ECOSYSTEM TAXONOMY DATASETS (Directed Trophic Food Webs)
+// ============================================================================
 const biomeData = {
   rainforest: {
     name: "Tropical Rainforest Canopy",
@@ -32,10 +34,14 @@ const biomeData = {
 
       { id: "fungus", name: "Luminescent Bracket Fungi", tier: 4, category: "Decomposer", iucn: 0, emoji: "🍄", x: 550, y: 380 }
     ],
+    // Directed links: [prey / food source, predator / consumer]
     links: [
-      ["fig", "monkey"], ["fig", "toucan"], ["orchid", "sloth"], ["bamboo", "sloth"],
+      ["fig", "monkey"], ["fig", "toucan"],
+      ["orchid", "frog"], ["orchid", "sloth"],
+      ["bamboo", "sloth"],
       ["monkey", "jaguar"], ["toucan", "eagle"], ["sloth", "jaguar"],
-      ["frog", "eagle"], ["eagle", "jaguar"], ["jaguar", "fungus"], ["sloth", "fungus"]
+      ["frog", "eagle"], ["eagle", "jaguar"],
+      ["jaguar", "fungus"], ["sloth", "fungus"]
     ]
   },
   ocean: {
@@ -58,8 +64,9 @@ const biomeData = {
       { id: "worm", name: "Benthic Abyssal Worms", tier: 4, category: "Decomposer", iucn: 0, emoji: "🪱", x: 550, y: 380 }
     ],
     links: [
-      ["phyto", "krill"], ["kelp", "turtle"], ["coral", "turtle"],
-      ["krill", "tuna"], ["tuna", "orca"], ["turtle", "orca"], ["octopus", "tuna"],
+      ["phyto", "krill"], ["kelp", "krill"], ["kelp", "turtle"], ["coral", "turtle"],
+      ["krill", "octopus"], ["krill", "tuna"],
+      ["octopus", "tuna"], ["tuna", "orca"], ["turtle", "orca"],
       ["orca", "worm"], ["tuna", "worm"]
     ]
   },
@@ -84,8 +91,9 @@ const biomeData = {
     ],
     links: [
       ["grass", "zebra"], ["acacia", "giraffe"], ["baobab", "giraffe"],
-      ["zebra", "cheetah"], ["zebra", "lion"], ["giraffe", "lion"],
-      ["cheetah", "hyena"], ["hyena", "lion"], ["lion", "beetle"], ["zebra", "beetle"]
+      ["zebra", "cheetah"], ["cheetah", "hyena"], ["hyena", "lion"],
+      ["zebra", "lion"], ["giraffe", "lion"],
+      ["lion", "beetle"], ["zebra", "beetle"]
     ]
   },
   arctic: {
@@ -107,41 +115,43 @@ const biomeData = {
       { id: "bacteria", name: "Permafrost Psychrophilic Microbiome", tier: 4, category: "Decomposer", iucn: 0, emoji: "🧫", x: 550, y: 380 }
     ],
     links: [
-      ["lichen", "caribou"], ["willow", "hare"],
+      ["lichen", "caribou"], ["willow", "hare"], ["lichen", "seal"],
       ["hare", "fox"], ["caribou", "bear"], ["seal", "bear"],
       ["fox", "bear"], ["bear", "bacteria"], ["seal", "bacteria"]
     ]
   }
 };
 
-const iucnLabels = ["Least Concern (LC)", "Near Threatened (NT)", "Vulnerable (VU)", "Endangered (EN)", "Critically Endangered (CR)"];
+const iucnLabels = [
+  "Least Concern (LC)",
+  "Near Threatened (NT)",
+  "Vulnerable (VU)",
+  "Endangered (EN)",
+  "Critically Endangered (CR)"
+];
 
-const container = document.getElementById('ecosystem-area');
-const width = container.clientWidth || 700;
-const height = container.clientHeight || 480;
+const categoryColors = {
+  Producer: "#10b981",
+  Herbivore: "#38bdf8",
+  Carnivore: "#f59e0b",
+  Apex: "#f43f5e",
+  Decomposer: "#a855f7"
+};
 
-const svg = d3.select(container)
-  .append('svg')
-  .attr('viewBox', `0 0 ${width} ${height}`);
-
-const g = svg.append('g');
-
-// Synthesizers
+// ============================================================================
+// 2. AUDIO SYNTHESIS & SCALERS
+// ============================================================================
 const synthProducer = createSynth({ type: "polySynth", volume: -4 });
 const synthHerbivore = createSynth({ type: "pluckSynth", volume: -2 });
 const synthCarnivore = createSynth({ type: "fmSynth", harmonicity: 3.0, volume: -3 });
 const synthApex = createSynth({ type: "polySynth", volume: -1 });
 const drums = createSamplePlayer();
 
-// Tension Scaler for IUCN Risk
 const tensionScaler = scaleTension().domain([0, 4]);
-
-// Pitch & Pan Scalers
 let currentBiomeKey = "rainforest";
 let pitchScale = scalePitch().domain([0, 4]).range(["C3", "C5"]).scale("dorian").root("D");
 const panScale = scalePan().domain([50, 600]).range([-0.8, 0.8]);
 
-// Mount Interactive Audio Legend
 const legend = audioLegend()
   .title("Categorical Taxonomy ⬄ Timbre Mapping Key")
   .pitch(pitchScale, "Trophic Tier Level (Producers ➔ Apex)")
@@ -150,9 +160,60 @@ const legend = audioLegend()
 
 d3.select("#legend-mount").call(legend);
 
-// Draw Canvas
-let currentSpeciesNodes = [];
-let currentLinkLines = [];
+// ============================================================================
+// 3. SVG CANVAS INITIALIZATION
+// ============================================================================
+const container = document.getElementById('ecosystem-area');
+const width = container.clientWidth || 700;
+const height = container.clientHeight || 480;
+
+const svg = d3.select(container)
+  .append('svg')
+  .attr('viewBox', `0 0 ${width} ${height}`);
+
+// Defs for directional arrowheads
+const defs = svg.append('defs');
+
+defs.append('marker')
+  .attr('id', 'arrow-default')
+  .attr('viewBox', '0 0 10 10')
+  .attr('refX', 26)
+  .attr('refY', 5)
+  .attr('markerWidth', 6)
+  .attr('markerHeight', 6)
+  .attr('orient', 'auto')
+  .append('path')
+  .attr('d', 'M 0 1.5 L 8 5 L 0 8.5 z')
+  .attr('fill', 'rgba(148, 163, 184, 0.45)');
+
+defs.append('marker')
+  .attr('id', 'arrow-active')
+  .attr('viewBox', '0 0 10 10')
+  .attr('refX', 26)
+  .attr('refY', 5)
+  .attr('markerWidth', 7)
+  .attr('markerHeight', 7)
+  .attr('orient', 'auto')
+  .append('path')
+  .attr('d', 'M 0 1.5 L 8 5 L 0 8.5 z')
+  .attr('fill', '#10b981');
+
+defs.append('marker')
+  .attr('id', 'arrow-backtrack')
+  .attr('viewBox', '0 0 10 10')
+  .attr('refX', 26)
+  .attr('refY', 5)
+  .attr('markerWidth', 6)
+  .attr('markerHeight', 6)
+  .attr('orient', 'auto')
+  .append('path')
+  .attr('d', 'M 0 1.5 L 8 5 L 0 8.5 z')
+  .attr('fill', '#fbbf24');
+
+const g = svg.append('g');
+
+let currentSpeciesNodes = null;
+let currentLinkLines = null;
 
 function renderBiome(biomeKey) {
   g.selectAll('*').remove();
@@ -184,19 +245,23 @@ function renderBiome(biomeKey) {
       .text(t.label);
   });
 
-  // Food Web Links
+  // Food Web Directed Links
   const speciesMap = new Map(biome.species.map(s => [s.id, s]));
-  const linkData = biome.links.map(l => ({ source: speciesMap.get(l[0]), target: speciesMap.get(l[1]) })).filter(d => d.source && d.target);
+  const linkData = biome.links
+    .map(l => ({ source: speciesMap.get(l[0]), target: speciesMap.get(l[1]) }))
+    .filter(d => d.source && d.target);
 
   currentLinkLines = g.selectAll('.food-link')
     .data(linkData)
     .enter()
     .append('line')
     .attr('class', 'food-link')
+    .attr('id', d => `link-${d.source.id}-${d.target.id}`)
     .attr('x1', d => d.source.x)
     .attr('y1', d => d.source.y)
     .attr('x2', d => d.target.x)
-    .attr('y2', d => d.target.y);
+    .attr('y2', d => d.target.y)
+    .attr('marker-end', 'url(#arrow-default)');
 
   // Species Nodes
   currentSpeciesNodes = g.selectAll('.species-node')
@@ -204,16 +269,8 @@ function renderBiome(biomeKey) {
     .enter()
     .append('g')
     .attr('class', 'species-node')
+    .attr('id', d => `node-${d.id}`)
     .attr('transform', d => `translate(${d.x}, ${d.y})`);
-
-  // Node halo colored by trophic category
-  const categoryColors = {
-    Producer: "#10b981",
-    Herbivore: "#38bdf8",
-    Carnivore: "#f59e0b",
-    Apex: "#f43f5e",
-    Decomposer: "#a855f7"
-  };
 
   currentSpeciesNodes.append('circle')
     .attr('r', d => d.category === 'Apex' ? 22 : 17)
@@ -227,28 +284,154 @@ function renderBiome(biomeKey) {
     .attr('font-size', d => d.category === 'Apex' ? '16px' : '14px')
     .text(d => d.emoji);
 
-  currentSpeciesNodes.on('mouseenter click', async function(event, d) {
+  // Click to start DFS from this specific organism
+  currentSpeciesNodes.on('click', async function(event, d) {
     await defaultEngine.start();
-    sonifySpecies(d, this);
+    startTraversalFromNode(d.id);
   });
+
+  // Hover to preview individual voice
+  currentSpeciesNodes.on('mouseenter', async function(event, d) {
+    if (!isPlaying) {
+      await defaultEngine.start();
+      sonifySpecies(d, this);
+    }
+  });
+
+  setupTraversalSteps();
 }
 
-// Categorical Sonification Engine
-function sonifySpecies(d, domNode) {
+// ============================================================================
+// 4. DEPTH-FIRST SEARCH (DFS) & BREADTH-FIRST SEARCH (BFS) GENERATORS
+// ============================================================================
+function generateDFSSteps(biome, startNodeId = null) {
+  const speciesMap = new Map(biome.species.map(s => [s.id, s]));
+  const adj = new Map();
+  const inDegree = new Map();
+
+  biome.species.forEach(s => {
+    adj.set(s.id, []);
+    inDegree.set(s.id, 0);
+  });
+
+  biome.links.forEach(([src, dst]) => {
+    if (adj.has(src) && adj.has(dst)) {
+      adj.get(src).push(dst);
+      inDegree.set(dst, (inDegree.get(dst) || 0) + 1);
+    }
+  });
+
+  let startRoots = [];
+  if (startNodeId && speciesMap.has(startNodeId)) {
+    startRoots = [startNodeId];
+  } else {
+    // Primary producers (inDegree === 0)
+    startRoots = biome.species.filter(s => inDegree.get(s.id) === 0).map(s => s.id);
+    if (startRoots.length === 0) {
+      startRoots = biome.species.filter(s => s.tier === 0).map(s => s.id);
+    }
+  }
+
+  const steps = [];
+  const visitedOnCurrentPath = new Set();
+  let chainCounter = 0;
+
+  function dfs(currId, parentId, currentPath) {
+    const node = speciesMap.get(currId);
+    if (!node) return;
+
+    visitedOnCurrentPath.add(currId);
+    const newPath = [...currentPath, node];
+    const children = (adj.get(currId) || []).filter(c => !visitedOnCurrentPath.has(c));
+    const isLeaf = children.length === 0;
+
+    if (isLeaf) chainCounter++;
+
+    steps.push({
+      type: 'dfs',
+      action: 'visit',
+      node,
+      parentId,
+      path: newPath,
+      isLeaf,
+      chainIndex: isLeaf ? chainCounter : null,
+      description: parentId
+        ? `${speciesMap.get(parentId).name} is consumed by ${node.name} (${node.category})`
+        : `Base Producer: ${node.name} initiates food chain`
+    });
+
+    for (const childId of children) {
+      dfs(childId, currId, newPath);
+    }
+
+    visitedOnCurrentPath.delete(currId);
+
+    // Backtrack step if returning to parent
+    if (parentId) {
+      steps.push({
+        type: 'dfs',
+        action: 'backtrack',
+        node: speciesMap.get(parentId),
+        fromNode: node,
+        path: currentPath,
+        description: `Backtracking from ${node.name} to ${speciesMap.get(parentId).name}`
+      });
+    }
+  }
+
+  startRoots.forEach(rootId => {
+    dfs(rootId, null, []);
+  });
+
+  return steps;
+}
+
+function generateBFSSteps(biome, startNodeId = null) {
+  const steps = [];
+  const tiers = [0, 1, 2, 3, 4];
+
+  tiers.forEach(tier => {
+    const tierSpecies = biome.species.filter(s => s.tier === tier);
+    tierSpecies.forEach(node => {
+      steps.push({
+        type: 'bfs',
+        action: 'visit',
+        node,
+        parentId: null,
+        path: [node],
+        isLeaf: tier === 3 || tier === 4,
+        chainIndex: null,
+        description: `Trophic Tier ${tier}: ${node.category} - ${node.name}`
+      });
+    });
+  });
+
+  return steps;
+}
+
+// ============================================================================
+// 5. SONIFICATION ENGINE & VISUAL CHOREOGRAPHY
+// ============================================================================
+function sonifySpecies(d, domNode, isBacktrack = false, isLeaf = false) {
   const pan = panScale(d.x);
   const tInfo = tensionScaler(d.iucn);
 
+  if (isBacktrack) {
+    // Subtle acoustic backtrack tick
+    drums.trigger("kick", "32n", undefined, 0.25, { pan });
+    return;
+  }
+
   // Categorical Instrument Timbre Routing
   if (d.category === "Decomposer") {
-    drums.trigger("blip", "16n", undefined, 0.85, { pan });
+    drums.trigger("snare", "16n", undefined, 0.85, { pan });
   } else if (d.category === "Producer") {
-    synthProducer.triggerAttackRelease(["C3", "G3"], "4n", undefined, 0.5, { pan });
+    synthProducer.triggerAttackRelease(["C3", "G3"], "4n", undefined, 0.55, { pan });
   } else if (d.category === "Herbivore") {
-    synthHerbivore.triggerAttackRelease(pitchScale(1), "16n", undefined, 0.7, { pan });
+    synthHerbivore.triggerAttackRelease(pitchScale(1), "16n", undefined, 0.75, { pan });
   } else if (d.category === "Carnivore") {
-    synthCarnivore.triggerAttackRelease(pitchScale(2), "8n", undefined, 0.8, { pan });
+    synthCarnivore.triggerAttackRelease(pitchScale(2), "8n", undefined, 0.85, { pan });
   } else if (d.category === "Apex") {
-    // If endangered, sound tense chords!
     if (tInfo.isDissonant) {
       synthApex.triggerAttackRelease(tInfo.chord, "4n", undefined, 0.95, { pan });
     } else {
@@ -256,66 +439,266 @@ function sonifySpecies(d, domNode) {
     }
   }
 
-  // Update UI Card
-  document.getElementById('species-title').innerHTML = `${d.emoji} ${d.name}`;
-  document.getElementById('species-stats').innerHTML = `
-    <strong>Category:</strong> ${d.category} (Tier ${d.tier})<br>
-    <strong>IUCN Red List:</strong> <span style="color: ${d.iucn >= 3 ? '#f43f5e' : (d.iucn >= 2 ? '#fbbf24' : '#10b981')}">${iucnLabels[d.iucn]}</span><br>
-    <strong>Harmonic Tension:</strong> ${tInfo.tier.toUpperCase()} (${tInfo.isDissonant ? 'Dissonant Tritone Shock' : 'Consonant Equilibrium'})
-  `;
+  // If completing a food chain, add a bright harmonic resolution chime
+  if (isLeaf && d.category !== "Producer") {
+    setTimeout(() => {
+      synthProducer.triggerAttackRelease(["E4", "B4"], "8n", undefined, 0.4, { pan });
+    }, 120);
+  }
 
   // Visual Choreography
   if (domNode) {
     choreography()
       .movement(d.iucn >= 3 ? "shake" : "pulse")
-      .intensity(1.3)
+      .intensity(1.35)
       .duration(0.3)(domNode);
 
     d3.select(domNode).classed('active-pulse', true);
-    setTimeout(() => d3.select(domNode).classed('active-pulse', false), 250);
+    setTimeout(() => d3.select(domNode).classed('active-pulse', false), 280);
   }
 }
 
-renderBiome(currentBiomeKey);
+// ============================================================================
+// 6. TRAVERSAL CONTROLLER & PLAYBACK STATE MACHINE
+// ============================================================================
+let activeSteps = [];
+let currentStepIndex = -1;
+let isPlaying = false;
+let traversalTimer = null;
+let traversalSpeedMs = 450;
+let traversalMode = 'dfs'; // 'dfs' | 'bfs'
+let customRootId = null;
 
-// Food Web Cascade Sequence
-let isCascading = false;
-let cascadeTimer = null;
-let cascadeIndex = 0;
-
-async function stepCascade() {
+function setupTraversalSteps() {
   const biome = biomeData[currentBiomeKey];
-  const sorted = [...biome.species].sort((a, b) => a.tier - b.tier);
-  const current = sorted[cascadeIndex];
-  const domNode = currentSpeciesNodes.filter(d => d.id === current.id).node();
+  activeSteps = traversalMode === 'dfs'
+    ? generateDFSSteps(biome, customRootId)
+    : generateBFSSteps(biome, customRootId);
 
-  sonifySpecies(current, domNode);
-
-  cascadeIndex = (cascadeIndex + 1) % sorted.length;
+  currentStepIndex = -1;
+  resetLinkHighlights();
+  updateHUD(null);
 }
 
-const cascadeBtn = document.getElementById('play-cascade-btn');
-cascadeBtn.addEventListener('click', async () => {
-  await defaultEngine.start();
-  if (isCascading) {
-    clearInterval(cascadeTimer);
-    isCascading = false;
-    cascadeBtn.innerText = "▶ Run Trophic Food Cascade";
+function resetLinkHighlights() {
+  if (currentLinkLines) {
+    currentLinkLines
+      .attr('class', 'food-link')
+      .attr('marker-end', 'url(#arrow-default)');
+  }
+  if (currentSpeciesNodes) {
+    currentSpeciesNodes.classed('active-pulse', false);
+  }
+}
+
+function highlightPath(path, backtrackFrom = null, backtrackTo = null) {
+  resetLinkHighlights();
+
+  if (backtrackFrom && backtrackTo) {
+    const linkEl = d3.select(`#link-${backtrackTo.id}-${backtrackFrom.id}`);
+    if (!linkEl.empty()) {
+      linkEl.attr('class', 'food-link backtrack').attr('marker-end', 'url(#arrow-backtrack)');
+    }
+  }
+
+  if (path && path.length > 1) {
+    for (let i = 0; i < path.length - 1; i++) {
+      const u = path[i].id;
+      const v = path[i + 1].id;
+      const linkEl = d3.select(`#link-${u}-${v}`);
+      if (!linkEl.empty()) {
+        linkEl.attr('class', 'food-link highlight').attr('marker-end', 'url(#arrow-active)');
+      }
+    }
+  }
+}
+
+function updateHUD(step) {
+  const counterEl = document.getElementById('dfs-step-counter');
+  const titleEl = document.getElementById('species-title');
+  const statsEl = document.getElementById('species-stats');
+  const breadcrumbEl = document.getElementById('dfs-breadcrumb');
+
+  if (!step) {
+    if (counterEl) counterEl.innerText = `${traversalMode.toUpperCase()} Ready (${activeSteps.length} Steps)`;
+    if (breadcrumbEl) {
+      breadcrumbEl.innerHTML = `<span style="font-size: 0.72rem; color: var(--muted); font-style: italic;">Press Run DFS or click any species to start</span>`;
+    }
+    return;
+  }
+
+  if (counterEl) {
+    counterEl.innerText = `${traversalMode.toUpperCase()} Step ${currentStepIndex + 1}/${activeSteps.length}`;
+  }
+
+  titleEl.innerHTML = `${step.node.emoji} ${step.node.name}`;
+  const tInfo = tensionScaler(step.node.iucn);
+
+  statsEl.innerHTML = `
+    <strong>Category:</strong> ${step.node.category} (Tier ${step.node.tier})<br>
+    <strong>Path Status:</strong> ${step.description}<br>
+    <strong>IUCN Red List:</strong> <span style="color: ${step.node.iucn >= 3 ? '#f43f5e' : (step.node.iucn >= 2 ? '#fbbf24' : '#10b981')}">${iucnLabels[step.node.iucn]}</span> • <strong>Tension:</strong> ${tInfo.tier.toUpperCase()}
+  `;
+
+  if (breadcrumbEl) {
+    if (step.action === 'backtrack') {
+      breadcrumbEl.innerHTML = `
+        <span class="path-chip backtracked">↩ Backtracking to: ${step.node.emoji} ${step.node.name}</span>
+        <span class="path-arrow">• exploring next branch</span>
+      `;
+    } else {
+      breadcrumbEl.innerHTML = step.path.map((n, idx) => {
+        const isCurrent = idx === step.path.length - 1;
+        const arrow = idx < step.path.length - 1 ? '<span class="path-arrow">➔</span>' : '';
+        return `<span class="path-chip ${isCurrent ? 'active' : ''}">${n.emoji} ${n.name.split(' ')[0]}</span> ${arrow}`;
+      }).join(' ');
+
+      if (step.isLeaf) {
+        breadcrumbEl.innerHTML += ` <span class="path-chip" style="background:#10b981; color:#030712;">🏆 Complete Chain #${step.chainIndex}</span>`;
+      }
+    }
+  }
+}
+
+function executeStep(step) {
+  if (!step) return;
+
+  const domNode = currentSpeciesNodes ? currentSpeciesNodes.filter(d => d.id === step.node.id).node() : null;
+
+  if (step.action === 'backtrack') {
+    highlightPath(step.path, step.fromNode, step.node);
+    sonifySpecies(step.node, domNode, true, false);
   } else {
-    isCascading = true;
-    cascadeIndex = 0;
-    cascadeTimer = setInterval(stepCascade, 220);
-    cascadeBtn.innerText = "⏸ Pause Trophic Cascade";
+    highlightPath(step.path, null, null);
+    sonifySpecies(step.node, domNode, false, step.isLeaf);
+  }
+
+  updateHUD(step);
+}
+
+function advanceStep() {
+  if (activeSteps.length === 0) return;
+
+  currentStepIndex++;
+  if (currentStepIndex >= activeSteps.length) {
+    // Loop back to start or pause
+    currentStepIndex = 0;
+  }
+
+  executeStep(activeSteps[currentStepIndex]);
+}
+
+function stepBack() {
+  pauseTraversal();
+  if (activeSteps.length === 0) return;
+
+  currentStepIndex--;
+  if (currentStepIndex < 0) {
+    currentStepIndex = activeSteps.length - 1;
+  }
+
+  executeStep(activeSteps[currentStepIndex]);
+}
+
+function stepForward() {
+  pauseTraversal();
+  advanceStep();
+}
+
+function startTraversal() {
+  if (isPlaying) return;
+  isPlaying = true;
+  document.getElementById('play-cascade-btn').innerText = "⏸ Pause DFS Traversal";
+
+  advanceStep();
+  traversalTimer = setInterval(advanceStep, traversalSpeedMs);
+}
+
+function pauseTraversal() {
+  if (!isPlaying) return;
+  isPlaying = false;
+  clearInterval(traversalTimer);
+  traversalTimer = null;
+  document.getElementById('play-cascade-btn').innerText = "▶ Run Depth-First Food Chain Traversal (DFS)";
+}
+
+function resetTraversal() {
+  pauseTraversal();
+  customRootId = null;
+  setupTraversalSteps();
+}
+
+function startTraversalFromNode(nodeId) {
+  pauseTraversal();
+  customRootId = nodeId;
+  setupTraversalSteps();
+  startTraversal();
+}
+
+// ============================================================================
+// 7. EVENT LISTENERS
+// ============================================================================
+const playBtn = document.getElementById('play-cascade-btn');
+playBtn.addEventListener('click', async () => {
+  await defaultEngine.start();
+  if (isPlaying) {
+    pauseTraversal();
+  } else {
+    startTraversal();
   }
 });
 
+const prevBtn = document.getElementById('step-prev-btn');
+if (prevBtn) {
+  prevBtn.addEventListener('click', async () => {
+    await defaultEngine.start();
+    stepBack();
+  });
+}
+
+const nextBtn = document.getElementById('step-next-btn');
+if (nextBtn) {
+  nextBtn.addEventListener('click', async () => {
+    await defaultEngine.start();
+    stepForward();
+  });
+}
+
+const resetBtn = document.getElementById('reset-traversal-btn');
+if (resetBtn) {
+  resetBtn.addEventListener('click', () => {
+    resetTraversal();
+  });
+}
+
+const modeSelect = document.getElementById('traversal-mode-select');
+if (modeSelect) {
+  modeSelect.addEventListener('change', (e) => {
+    traversalMode = e.target.value;
+    resetTraversal();
+    playBtn.innerText = traversalMode === 'dfs'
+      ? "▶ Run Depth-First Food Chain Traversal (DFS)"
+      : "▶ Run Breadth-First Trophic Traversal (BFS)";
+  });
+}
+
+const speedSlider = document.getElementById('traversal-speed');
+const speedValLabel = document.getElementById('speed-val');
+if (speedSlider) {
+  speedSlider.addEventListener('input', (e) => {
+    traversalSpeedMs = parseInt(e.target.value, 10);
+    if (speedValLabel) speedValLabel.innerText = `${traversalSpeedMs} ms`;
+    if (isPlaying) {
+      clearInterval(traversalTimer);
+      traversalTimer = setInterval(advanceStep, traversalSpeedMs);
+    }
+  });
+}
+
 document.getElementById('biome-select').addEventListener('change', (e) => {
-  if (isCascading) {
-    clearInterval(cascadeTimer);
-    isCascading = false;
-    cascadeBtn.innerText = "▶ Run Trophic Food Cascade";
-  }
+  pauseTraversal();
   currentBiomeKey = e.target.value;
+  customRootId = null;
   renderBiome(currentBiomeKey);
 });
 
@@ -327,3 +710,6 @@ document.getElementById('status-filter').addEventListener('change', (e) => {
     return 1;
   });
 });
+
+// Initial boot
+renderBiome(currentBiomeKey);

@@ -89,13 +89,23 @@
 
     .food-link {
       fill: none;
-      stroke: rgba(148, 163, 184, 0.2);
-      stroke-width: 1.5px;
-      transition: stroke 0.2s, stroke-width 0.2s;
+      stroke: rgba(148, 163, 184, 0.22);
+      stroke-width: 1.6px;
+      transition: stroke 0.2s, stroke-width 0.2s, opacity 0.2s;
     }
     .food-link.highlight {
-      stroke: #10b981;
-      stroke-width: 3px;
+      stroke: #10b981 !important;
+      stroke-width: 3.5px !important;
+      filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.8));
+    }
+    .food-link.backtrack {
+      stroke: #fbbf24 !important;
+      stroke-width: 2.2px !important;
+      stroke-dasharray: 4 3;
+      opacity: 0.8 !important;
+    }
+    .food-link.dimmed {
+      opacity: 0.12 !important;
     }
 
     .btn {
@@ -107,9 +117,35 @@
       font-weight: 800;
       cursor: pointer;
       width: 100%;
-      margin-bottom: 0.75rem;
+      margin-bottom: 0.5rem;
+      transition: background 0.15s, transform 0.1s;
     }
     .btn:hover { background: #34d399; }
+    .btn:active { transform: scale(0.99); }
+
+    .step-btn-row {
+      display: flex;
+      gap: 0.4rem;
+      margin-bottom: 0.85rem;
+    }
+    .step-btn {
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #94a3b8;
+      border-radius: 6px;
+      padding: 0.35rem 0.6rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      flex: 1;
+      transition: all 0.15s;
+    }
+    .step-btn:hover {
+      background: #334155;
+      color: #fff;
+      border-color: var(--accent);
+    }
+    .step-btn:active { transform: scale(0.97); }
 
     .control-group { margin-bottom: 1.1rem; }
     label {
@@ -136,6 +172,34 @@
       border-radius: 8px;
       padding: 0.9rem;
       margin-top: 1rem;
+    }
+
+    .path-chip {
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #6ee7b7;
+      padding: 0.2rem 0.45rem;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    .path-chip.active {
+      background: #10b981;
+      color: #030712;
+      border-color: #34d399;
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
+    }
+    .path-chip.backtracked {
+      background: rgba(251, 191, 36, 0.15);
+      border-color: rgba(251, 191, 36, 0.4);
+      color: #fbbf24;
+    }
+    .path-arrow {
+      color: var(--muted);
+      font-size: 0.7rem;
     }
   </style>
 </head>
@@ -165,7 +229,29 @@
 
       <!-- Controls & Taxonomy Lab -->
       <div class="panel">
-        <button id="play-cascade-btn" class="btn">▶ Run Trophic Food Cascade</button>
+        <button id="play-cascade-btn" class="btn">▶ Run Depth-First Food Chain Traversal (DFS)</button>
+
+        <div class="step-btn-row">
+          <button id="step-prev-btn" class="step-btn" title="Step backward along food chain">⏮ Step Back</button>
+          <button id="step-next-btn" class="step-btn" title="Step forward along food chain">⏭ Step Forward</button>
+          <button id="reset-traversal-btn" class="step-btn" title="Reset Traversal">🔄 Reset</button>
+        </div>
+
+        <div class="control-group">
+          <label>Food Web Traversal Method</label>
+          <select id="traversal-mode-select">
+            <option value="dfs" selected>🌲 Depth-First Search (DFS) - Complete Food Chains</option>
+            <option value="bfs">🌊 Breadth-First Search (BFS) - Trophic Tiers</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+            <label style="margin-bottom: 0;">Traversal Speed</label>
+            <span id="speed-val" style="font-size: 0.75rem; color: var(--accent); font-weight: 700;">450 ms</span>
+          </div>
+          <input type="range" id="traversal-speed" min="150" max="900" step="50" value="450">
+        </div>
 
         <div class="control-group">
           <label>Ecosystem Biome (Musical Mode)</label>
@@ -187,16 +273,23 @@
         </div>
 
         <div class="hud-box">
-          <div style="font-size: 0.85rem; font-weight: 800; color: #fff; margin-bottom: 0.35rem;" id="species-title">🐾 Species Inspector</div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+            <div style="font-size: 0.85rem; font-weight: 800; color: #fff;" id="species-title">🐾 Species Inspector</div>
+            <span id="dfs-step-counter" style="font-size: 0.7rem; color: var(--gold); font-weight: 700;">DFS Ready</span>
+          </div>
+          <div id="dfs-breadcrumb" style="display: flex; align-items: center; gap: 0.3rem; flex-wrap: wrap; margin-bottom: 0.5rem; min-height: 24px;">
+            <span style="font-size: 0.72rem; color: var(--muted); font-style: italic;">Press Run DFS or click any species to trace food chains</span>
+          </div>
           <div id="species-stats" style="font-size: 0.78rem; color: var(--muted); line-height: 1.55;">
-            Click any organism to hear its categorical trophic voice and inspect its IUCN conservation tension.
+            Click any organism to hear its categorical trophic voice and launch DFS along its branches.
           </div>
         </div>
 
         <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem; font-size: 0.75rem; color: var(--muted); line-height: 1.5; margin-top: 1rem;">
-          • <strong>Categorical Trophic Timbre</strong>: Producers (Ambient Pad), Herbivores (Plucked Kalimba), Carnivores (Resonant Lead), Apex (Sub Horn), Decomposers (Percussion).<br>
-          • <strong>Categorical Biome Modes</strong>: Tropical (Dorian), Ocean (Lydian), Savanna (Pentatonic), Arctic (Hirajoshi).<br>
-          • <strong>Ordinal Conservation Tension (`scaleTension`)</strong>: Least Concern (Consonant Major) ➔ Critically Endangered (Tritone Dissonance).
+          • <strong>Depth-First Search (DFS)</strong>: Traverses individual biological food chains from Primary Producer all the way to Apex & Decomposer before backtracking to the next branch.<br>
+          • <strong>Trophic Timbre</strong>: Producers (Ambient Pad), Herbivores (Plucked Kalimba), Carnivores (Resonant Lead), Apex (Sub Horn), Decomposers (Percussion).<br>
+          • <strong>Biome Modes</strong>: Tropical (Dorian), Ocean (Lydian), Savanna (Pentatonic), Arctic (Hirajoshi).<br>
+          • <strong>IUCN Tension (`scaleTension`)</strong>: Least Concern (Major Triad) ➔ Critically Endangered (Tritone Dissonance).
         </div>
       </div>
     </div>
@@ -207,6 +300,12 @@
         <span>🎧</span> How to Interpret the Audiovisual Results
       </h3>
       <ul style="list-style: none; padding: 0; font-size: 0.82rem; color: var(--text); line-height: 1.6;">
+        <li style="margin-bottom: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.06);">
+          <div style="font-weight: 700; color: #38bdf8;">🌲 Depth-First Search (DFS) ➔ Coherent Biological Food Chains</div>
+          <p style="color: var(--muted); margin-top: 0.25rem;">
+            Rather than jumping haphazardly across horizontal tiers, <strong>Depth-First Search (DFS)</strong> follows a single biological food chain from primary producer up through herbivores and carnivores to apex predators and decomposers before backtracking. The listener hears energy ascend from deep ambient roots to sharp resonant leads and resolving decomposer clicks as a cohesive musical phrase.
+          </p>
+        </li>
         <li style="margin-bottom: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.06);">
           <div style="font-weight: 700; color: #facc15;">🌿 Trophic Pyramid Tier ➔ Synthesis Instrument & Octave</div>
           <p style="color: var(--muted); margin-top: 0.25rem;">
