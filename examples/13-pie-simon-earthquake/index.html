@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>13. Seismic Simon: Real Earthquake Pie Sonifier | d3-audio</title>
   <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <script src="../../dist/d3-audio.js"></script>
   <style>
@@ -174,6 +175,145 @@
     }
     .stat-label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; font-weight: 700; }
     .stat-val { font-size: 1.3rem; font-weight: 800; color: #fff; margin-top: 0.2rem; }
+
+    /* Date Selection Box */
+    .date-panel {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.85rem;
+      margin-top: 0.75rem;
+    }
+    .date-picker-input {
+      background: #02050e;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 6px;
+      color: #fff;
+      padding: 0.45rem 0.6rem;
+      font-size: 0.85rem;
+      flex: 1;
+      outline: none;
+    }
+    .date-picker-input::-webkit-calendar-picker-indicator {
+      filter: invert(1);
+      cursor: pointer;
+    }
+    .quick-preset-btn {
+      background: #1e293b;
+      border: 1px solid rgba(255,255,255,0.08);
+      color: #94a3b8;
+      border-radius: 4px;
+      padding: 0.25rem 0.5rem;
+      font-size: 0.7rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .quick-preset-btn:hover {
+      background: #334155;
+      color: #fff;
+      border-color: var(--accent);
+    }
+    .quick-preset-btn.active {
+      background: rgba(56, 189, 248, 0.2);
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+
+    /* 3D World Globe */
+    .globe-panel {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.85rem;
+      margin-top: 0.75rem;
+    }
+    .globe-ctrl-btn {
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #94a3b8;
+      border-radius: 4px;
+      padding: 0.15rem 0.4rem;
+      font-size: 0.68rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .globe-ctrl-btn:hover {
+      background: #334155;
+      color: #fff;
+      border-color: var(--accent);
+    }
+    .globe-ctrl-btn.active {
+      background: rgba(56, 189, 248, 0.2);
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+    .globe-ocean {
+      stroke: rgba(56, 189, 248, 0.35);
+      stroke-width: 1.5px;
+    }
+    .globe-graticule {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.07);
+      stroke-width: 0.75px;
+    }
+    .globe-land {
+      fill: #1e3a5f;
+      stroke: #38bdf8;
+      stroke-width: 0.8px;
+      stroke-linejoin: round;
+    }
+    .globe-atmosphere {
+      pointer-events: none;
+    }
+    #globe-svg {
+      cursor: grab;
+      user-select: none;
+    }
+    #globe-svg:active {
+      cursor: grabbing;
+    }
+
+    /* Tectonic Fault Lines & Rupture Animation */
+    .regional-fault {
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: stroke-width 0.25s, opacity 0.25s;
+    }
+    .regional-fault.active-fault {
+      stroke-width: 4px !important;
+      opacity: 1 !important;
+      filter: drop-shadow(0 0 6px #ffffff) !important;
+    }
+    .rupture-pulse-line {
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 6 3;
+      animation: ruptureFlow 1.2s linear infinite;
+    }
+    @keyframes ruptureFlow {
+      to { stroke-dashoffset: -18; }
+    }
+    .fault-tag-label {
+      font-size: 8.5px;
+      font-weight: 800;
+      fill: #ffffff;
+      pointer-events: none;
+    }
+    .fault-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.65rem;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      font-weight: 700;
+      background: rgba(244, 63, 94, 0.15);
+      color: #f43f5e;
+      border: 1px solid rgba(244, 63, 94, 0.3);
+    }
   </style>
 </head>
 <body>
@@ -197,6 +337,7 @@
             <span class="stat-label">Round</span>
             <span class="hub-score" id="round-num">1</span>
             <span class="hub-status" id="turn-indicator">Watch</span>
+            <span id="step-tracker" style="font-size: 0.65rem; color: var(--muted); font-weight: 700; margin-top: 0.2rem;">Ready</span>
           </div>
         </div>
         <!-- Interactive Audio Legend Mount -->
@@ -218,28 +359,40 @@
             </thead>
             <tbody>
               <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <td style="padding: 0.45rem 0; font-weight: 700; color: #fff;">Pie Chart Slices</td>
+                <td>6 Global Fault Zones</td>
+                <td>Pie Slices & Colors</td>
+                <td>Slices represent global tectonic regions (Japan Trench, Chile, Cascadia, Sunda, San Andreas, Himalayas). Slice angle reflects regional earthquake activity.</td>
+              </tr>
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <td style="padding: 0.45rem 0; font-weight: 700; color: #fff;">Simon Sequence</td>
+                <td>Chronological Order</td>
+                <td>Sequence Order</td>
+                <td>The game sequence is determined by the exact order in which earthquakes occur by region (historical timeline or live USGS feed).</td>
+              </tr>
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                 <td style="padding: 0.45rem 0; font-weight: 700; color: #fff;">Focal Depth</td>
-                <td>10 km – 35 km</td>
+                <td>5 km – 60 km</td>
                 <td>Pitch: G4 ➔ C2</td>
-                <td><code>scalePitch().domain([10,35]).range(['G4','C2'])</code> — Shallow crust quakes produce high resonant chimes; deep mantle quakes produce low sub-bass rumbles.</td>
+                <td><code>scalePitch().domain([5,60]).range(['G4','C2'])</code> — Shallow crustal quakes produce crisp ringing chimes; deep mantle quakes produce low sub-bass rumbles.</td>
               </tr>
               <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                 <td style="padding: 0.45rem 0; font-weight: 700; color: #fff;">Magnitude (Mw)</td>
-                <td>7.0 – 9.5</td>
-                <td>Gain: 0.55 – 1.0</td>
-                <td><code>scaleGain().domain([7.0,9.5]).range([0.55,1.0])</code> — Exponential energy (E ∝ 10<sup>1.5M</sup>) drives punchy acoustic kick velocity and volume.</td>
+                <td>4.5 – 9.5</td>
+                <td>Gain: 0.50 – 1.0</td>
+                <td><code>scaleGain().domain([4.5,9.5]).range([0.5,1.0])</code> — Exponential energy release drives acoustic transient kick punch and synthesizer amplitude.</td>
               </tr>
               <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                <td style="padding: 0.45rem 0; font-weight: 700; color: #fff;">Longitude / Fault</td>
-                <td>6 Global Zones</td>
+                <td style="padding: 0.45rem 0; font-weight: 700; color: #fff;">Region Longitude</td>
+                <td>West ↔ East</td>
                 <td>Pan: -0.8 ➔ +0.8</td>
-                <td><code>scalePan().domain([0,5]).range([-0.8,0.8])</code> — Pacific Cascadia/Chile to Asian/Himalayan fault lines mapped across stereo width.</td>
+                <td><code>scalePan().domain([0,5]).range([-0.8,0.8])</code> — Pacific West (Cascadia/Chile) panned left; East Asia/Himalayas panned right across the stereo soundstage.</td>
               </tr>
               <tr>
-                <td style="padding: 0.45rem 0; font-weight: 700; color: #fff;">Energy Arc Area</td>
-                <td>E = 10<sup>(M-6) × 0.8</sup></td>
-                <td>Pie Slice Angle</td>
-                <td><code>d3.pie().value(...)</code> — Arc angle width scaled logarithmically to seismic joules released.</td>
+                <td style="padding: 0.45rem 0; font-weight: 700; color: #fff;">3D Fault Visualization</td>
+                <td>Global Coordinates</td>
+                <td>Spherical Tectonic Traces</td>
+                <td><code>d3.geoOrthographic()</code> projects real plate boundaries and the 6 regional fault lines (San Andreas, Cascadia, Chile, Japan, Sunda, Himalayas) directly on the 3D sphere, illuminating the rupturing fault in real-time.</td>
               </tr>
             </tbody>
           </table>
@@ -252,21 +405,33 @@
           </h3>
           <ul style="list-style: none; padding: 0; font-size: 0.82rem; color: var(--text); line-height: 1.6;">
             <li style="margin-bottom: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.06);">
-              <div style="font-weight: 700; color: #facc15;">🌋 Focal Depth (km) ➔ Sub-Bass Rumble vs. High Chime</div>
+              <div style="font-weight: 700; color: #38bdf8;">🌐 Pie Slices = Global Tectonic Regions</div>
               <p style="color: var(--muted); margin-top: 0.25rem;">
-                Shallow crustal ruptures ($10\text{--}15\text{ km}$) produce high-frequency ringing chimes ($G_4$); deep subduction zone mantle temblors ($35\text{--}70\text{ km}$) vibrate in subterranean sub-bass octaves ($C_2$).
+                Each wedge of the pie represents a major global fault zone. Slice sizes reflect the volume and energy of earthquakes recorded in that sector.
               </p>
             </li>
             <li style="margin-bottom: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.06);">
-              <div style="font-weight: 700; color: #f43f5e;">💥 Moment Magnitude ($M_w$) ➔ Acoustic Loudness & Percussive Kick</div>
+              <div style="font-weight: 700; color: #fbbf24;">⏱️ Sequence = Chronological Earthquake Occurrence</div>
               <p style="color: var(--muted); margin-top: 0.25rem;">
-                Earthquake energy scales exponentially ($E \propto 10^{1.5M}$). Major quakes ($M_w \ge 8.0$) trigger maximum synthesizer gain ($1.0$) combined with a heavy acoustic transient thump, mirroring logarithmic energy release.
+                Unlike traditional random Simon games, each round introduces the next real earthquake in time. Repeat the sequence of regions to reconstruct the timeline!
+              </p>
+            </li>
+            <li style="margin-bottom: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.06);">
+              <div style="font-weight: 700; color: #a855f7;">⚡ 3D Globe Fault Traces ➔ Active Rupture Visualization</div>
+              <p style="color: var(--muted); margin-top: 0.25rem;">
+                The 3D globe displays actual tectonic plate boundaries and fault traces. When an earthquake is sonified, the Earth rotates to face the fault while an animated glowing rupture pulse illuminates along the fault trace.
+              </p>
+            </li>
+            <li style="margin-bottom: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.06);">
+              <div style="font-weight: 700; color: #facc15;">🌋 Focal Depth (km) ➔ Sub-Bass Rumble vs. High Chime</div>
+              <p style="color: var(--muted); margin-top: 0.25rem;">
+                Shallow crustal ruptures ($5\text{--}15\text{ km}$) ring with high-frequency chimes ($G_4$); deep subduction zone mantle temblors ($30\text{--}60\text{ km}$) vibrate in sub-bass octaves ($C_2$).
               </p>
             </li>
             <li>
-              <div style="font-weight: 700; color: #10b981;">🧭 Fault Longitude ➔ Stereo Ear Direction</div>
+              <div style="font-weight: 700; color: #f43f5e;">💥 Moment Magnitude ($M_w$) ➔ Acoustic Loudness & Percussive Kick</div>
               <p style="color: var(--muted); margin-top: 0.25rem;">
-                American Pacific Rim faults (Cascadia, Chile) sound on the far left of the stereo stage; Asian, Indonesian, and Japanese Ring of Fire subduction zones sound on the far right.
+                Earthquake energy scales exponentially ($E \propto 10^{1.5M}$). Major quakes ($M_w \ge 8.0$) trigger full synthesizer gain ($1.0$) combined with a heavy acoustic transient thump.
               </p>
             </li>
           </ul>
@@ -285,27 +450,76 @@
             <div class="stat-val" id="streak-val" style="color: var(--gold);">0</div>
           </div>
           <div class="stat-box">
-            <div class="stat-label">Quakes Explored</div>
+            <div class="stat-label">Regions Explored</div>
             <div class="stat-val" id="unlocked-val" style="color: var(--accent);">0/6</div>
           </div>
         </div>
 
         <button id="start-game-btn" class="btn">▶ Start Seismic Simon Game</button>
-        <button id="fetch-live-btn" class="btn btn-live">📡 Fetch Live USGS Earthquakes (M4.5+)</button>
+        <button id="fetch-live-btn" class="btn btn-live">📡 Fetch Live USGS Earthquakes (Past 24h)</button>
+
+        <!-- Date Selection Panel -->
+        <div class="date-panel">
+          <label for="quake-date-picker" style="font-size: 0.72rem; font-weight: 700; color: var(--accent); text-transform: uppercase; display: flex; align-items: center; gap: 0.35rem; margin-bottom: 0.4rem;">
+            <span>📅</span> Pick Date & Download Earthquakes
+          </label>
+          <div style="display: flex; gap: 0.4rem; align-items: center;">
+            <input type="date" id="quake-date-picker" class="date-picker-input">
+            <button id="fetch-date-btn" class="btn" style="width: auto; padding: 0.45rem 0.8rem; font-size: 0.8rem; white-space: nowrap;">📥 Load Date</button>
+          </div>
+          <!-- Quick date presets -->
+          <div style="display: flex; gap: 0.35rem; margin-top: 0.5rem; flex-wrap: wrap;">
+            <button class="quick-preset-btn" data-preset="today">Today</button>
+            <button class="quick-preset-btn" data-preset="yesterday">Yesterday</button>
+            <button class="quick-preset-btn" data-date="2024-04-03">2024 Taiwan M7.4</button>
+            <button class="quick-preset-btn" data-date="2024-01-01">2024 Noto M7.5</button>
+            <button class="quick-preset-btn" data-date="2011-03-11">2011 Tohoku M9.1</button>
+          </div>
+        </div>
+
+        <!-- 3D World Map (Rotating Globe with Visible Fault Lines) -->
+        <div class="globe-panel">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem; flex-wrap: wrap; gap: 0.35rem;">
+            <div style="display: flex; align-items: center; gap: 0.35rem;">
+              <span style="font-size: 0.8rem; font-weight: 800; color: var(--accent); display: flex; align-items: center; gap: 0.35rem;">
+                <span>🌐</span> 3D Earth
+              </span>
+              <button id="globe-cinematic-toggle" class="globe-ctrl-btn active" title="Toggle zoom out => rotate => zoom in fly-through">🎬 Fly-Through: ON</button>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.25rem;">
+              <button id="globe-zoom-out" class="globe-ctrl-btn" title="Zoom Out">−</button>
+              <span id="globe-zoom-level" style="font-size: 0.65rem; color: var(--muted); font-weight: 700; min-width: 32px; text-align: center;">100%</span>
+              <button id="globe-zoom-in" class="globe-ctrl-btn" title="Zoom In">+</button>
+              <button id="globe-zoom-reset" class="globe-ctrl-btn" title="Reset Zoom">🎯</button>
+            </div>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+            <span class="fault-badge">⚡ Faults & Ruptures Visible</span>
+            <span id="globe-facing-badge" style="font-size: 0.72rem; color: var(--gold); font-weight: 700;">Facing: Cascadia Zone</span>
+          </div>
+          <div id="globe-container" style="width: 100%; height: 210px; display: flex; justify-content: center; align-items: center; position: relative;">
+            <svg id="globe-svg" viewBox="0 0 280 210" style="width: 100%; height: 100%; overflow: visible;"></svg>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.68rem; color: var(--muted); margin-top: 0.2rem;">
+            <span>Drag to rotate • Colored lines show active faults</span>
+            <span id="globe-epicenter-coord">Lat: 45.0°, Lon: -125.0°</span>
+          </div>
+        </div>
 
         <!-- Educational Fact Sheet Card -->
         <div class="info-card" id="info-card">
           <div class="info-title" id="info-title">🌋 Welcome to Seismic Simon!</div>
           <div id="info-badges"></div>
           <p id="info-desc" style="font-size: 0.85rem; color: var(--muted); line-height: 1.55; margin-top: 0.5rem;">
-            Watch the pie slices light up and listen to their deep tectonic frequencies. Repeat the seismic pattern by clicking the slices to advance levels and learn about real earthquake fault zones!
+            The pie chart pieces represent 6 major global fault regions. Watch the region slices light up and listen to their tectonic frequencies in the exact order earthquakes occurred. Repeat the sequence of regions to advance through seismic history! Click any slice before playing to preview that region's sonification.
           </p>
         </div>
 
         <div style="margin-top: 1rem; font-size: 0.75rem; color: var(--muted); line-height: 1.5; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 0.75rem;">
-          • <strong>Magnitude ($M_w$)</strong> → Bass rumble impact + gain amplitude.<br>
-          • <strong>Depth (km)</strong> → Pitch frequency (Deep mantle = low sub-bass, Shallow crust = crisp resonant chime).<br>
-          • <strong>Arc Width</strong> → Regional seismic energy release ($E = 10^{1.5M + 4.8}$).
+          • <strong>Pie Pieces</strong> → 6 Global Seismic Regions.<br>
+          • <strong>Game Sequence</strong> → Exact chronological order of earthquake occurrence by region.<br>
+          • <strong>Depth (km)</strong> → Pitch frequency (Deep mantle = sub-bass, Shallow crust = high chime).<br>
+          • <strong>Magnitude ($M_w$)</strong> → Kick rumble punch + acoustic volume.
         </div>
       </div>
     </div>
