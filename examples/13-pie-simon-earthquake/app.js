@@ -849,7 +849,7 @@ function getPieMetrics() {
 }
 
 const svg = d3.select(container)
-  .append('svg')
+  .insert('svg', ':first-child')
   .attr('class', 'pie-chart-svg');
 
 const g = svg.append('g');
@@ -1769,7 +1769,11 @@ function updateTurnIndicator(text, mode = 'watch') {
 }
 
 async function startNewGame() {
-  await defaultEngine.start();
+  try {
+    await defaultEngine.start();
+  } catch (err) {
+    console.warn("Audio unlock notice in startNewGame:", err);
+  }
   playerStep = 0;
   currentRound = 1;
   currentScore = 0;
@@ -1910,17 +1914,32 @@ function handlePlayerInput(clickedRegionId, domElement, clickedRegion) {
   }
 }
 
-document.getElementById('start-game-btn').addEventListener('click', () => {
+let lastStartTriggerTime = 0;
+function triggerStartSimonGame(e) {
+  const now = Date.now();
+  if (now - lastStartTriggerTime < 350) return;
+  lastStartTriggerTime = now;
+  if (e && e.cancelable && e.type === 'touchstart') {
+    e.preventDefault();
+  }
   startNewGame();
-});
+}
+
+const mainStartBtn = document.getElementById('start-game-btn');
+if (mainStartBtn) {
+  mainStartBtn.addEventListener('click', triggerStartSimonGame);
+  mainStartBtn.addEventListener('touchstart', triggerStartSimonGame, { passive: false });
+}
 
 const globeTurnBadge = document.getElementById('turn-badge');
 if (globeTurnBadge) {
-  globeTurnBadge.addEventListener('click', () => {
+  const handleGlobeStart = (e) => {
     if (!isGameRunning) {
-      startNewGame();
+      triggerStartSimonGame(e);
     }
-  });
+  };
+  globeTurnBadge.addEventListener('click', handleGlobeStart);
+  globeTurnBadge.addEventListener('touchstart', handleGlobeStart, { passive: false });
 }
 
 // ============================================================================
