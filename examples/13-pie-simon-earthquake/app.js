@@ -772,17 +772,36 @@ const drums = createSamplePlayer();
 const SPATIAL_REGION_ORDER = [2, 0, 5, 3, 1, 4];
 
 const container = document.getElementById('pie-area');
-const width = 760;
-const height = 600;
-const radius = 236;
-const innerRadius = 136;
+
+function getPieMetrics() {
+  const rect = container.getBoundingClientRect();
+  const boxW = (rect.width && rect.width > 200) ? Math.round(rect.width) : 720;
+  const boxH = (rect.height && rect.height > 200) ? Math.round(rect.height) : 600;
+  const minDim = Math.min(boxW, boxH);
+
+  // Measure actual rendered globe radius in screen pixels
+  const globeEl = document.getElementById('globe-container');
+  const globeW = globeEl ? (globeEl.offsetWidth || 216) : 216;
+  const globeRadius = Math.round(globeW / 2);
+
+  // Guaranteed safe clearance: donut inner hole is ALWAYS outside the globe with 16px buffer
+  const innerRadius = Math.max(116, globeRadius + 16);
+
+  // Outer radius sized to fit comfortably inside the box without touching corners or outer edges
+  const maxOuter = Math.min(Math.round(minDim / 2) - 24, 252);
+  const outerRadius = Math.max(innerRadius + 85, maxOuter);
+
+  // Label centroid positioned at 56% of radial thickness (pushed outwards, far away from globe)
+  const labelRadius = innerRadius + (outerRadius - innerRadius) * 0.56;
+
+  return { boxW, boxH, innerRadius, outerRadius, labelRadius };
+}
 
 const svg = d3.select(container)
   .append('svg')
-  .attr('viewBox', `0 0 ${width} ${height}`);
+  .attr('class', 'pie-chart-svg');
 
-const g = svg.append('g')
-  .attr('transform', `translate(${width / 2}, ${height / 2})`);
+const g = svg.append('g');
 
 const pieLayout = d3.pie()
   .value(d => Math.max(2, (d.quakeCount || 1) * 1.5))
@@ -791,11 +810,7 @@ const pieLayout = d3.pie()
   .padAngle(0.04)
   .sort(null);
 
-const arcGenerator = d3.arc()
-  .innerRadius(innerRadius)
-  .outerRadius(radius)
-  .cornerRadius(6);
-
+let arcGenerator, labelArcGenerator;
 let piePaths, sliceLabelGroups;
 
 function getSliceNode(regionId) {
@@ -810,6 +825,20 @@ function getSliceNode(regionId) {
 
 function renderPie(regionsData) {
   g.selectAll('*').remove();
+
+  const metrics = getPieMetrics();
+  svg.attr('viewBox', `0 0 ${metrics.boxW} ${metrics.boxH}`)
+     .attr('preserveAspectRatio', 'xMidYMid meet');
+  g.attr('transform', `translate(${metrics.boxW / 2}, ${metrics.boxH / 2})`);
+
+  arcGenerator = d3.arc()
+    .innerRadius(metrics.innerRadius)
+    .outerRadius(metrics.outerRadius)
+    .cornerRadius(6);
+
+  labelArcGenerator = d3.arc()
+    .innerRadius(metrics.labelRadius)
+    .outerRadius(metrics.labelRadius);
 
   // Order regions spatially by shortest global great-circle distance
   const orderedRegions = SPATIAL_REGION_ORDER.map(id => regionsData.find(r => r.id === id) || regionsData[id]);
@@ -830,26 +859,83 @@ function renderPie(regionsData) {
     .append('g')
     .attr('class', 'slice-label')
     .attr('transform', d => {
-      const [x, y] = arcGenerator.centroid(d);
+      const [x, y] = labelArcGenerator.centroid(d);
       return `translate(${x}, ${y})`;
     })
     .attr('pointer-events', 'none');
 
-  sliceLabelGroups.append('text')
-    .attr('text-anchor', 'middle')
-    .attr('dy', '-0.3em')
-    .attr('fill', '#ffffff')
-    .attr('font-size', '13px')
-    .attr('font-weight', '800')
-    .text(d => d.data.name);
+  sliceLabelGroups.each(function(d) {
+    const group = d3.select(this);
+    const fullName = d.data.name;
+    const words = fullName.split(' ');
 
-  sliceLabelGroups.append('text')
-    .attr('text-anchor', 'middle')
-    .attr('dy', '1.15em')
-    .attr('fill', 'rgba(255, 255, 255, 0.8)')
-    .attr('font-size', '10.5px')
-    .attr('font-weight', '600')
-    .text(d => `${d.data.quakeCount} Quake${d.data.quakeCount === 1 ? '' : 's'}`);
+    const textEl = group.append('text')
+      .attr('text-anchor', 'middle')
+      .attr('fill', '#ffffff');
+
+    if (fullName === 'San Andreas') {
+      textEl.append('tspan')
+        .attr('x', 0)
+        .attr('dy', '-0.65em')
+        .attr('font-size', '12px')
+        .attr('font-weight', '800')
+        .text('San Andreas');
+
+      textEl.append('tspan')
+        .attr('x', 0)
+        .attr('dy', '1.15em')
+        .attr('font-size', '10px')
+        .attr('font-weight', '700')
+        .attr('fill', 'rgba(255, 255, 255, 0.92)')
+        .text('Fault');
+
+      textEl.append('tspan')
+        .attr('x', 0)
+        .attr('dy', '1.25em')
+        .attr('font-size', '9px')
+        .attr('font-weight', '600')
+        .attr('fill', 'rgba(255, 255, 255, 0.75)')
+        .text(`${d.data.quakeCount} Quake${d.data.quakeCount === 1 ? '' : 's'}`);
+    } else if (words.length >= 2) {
+      textEl.append('tspan')
+        .attr('x', 0)
+        .attr('dy', '-0.65em')
+        .attr('font-size', '12px')
+        .attr('font-weight', '800')
+        .text(words[0]);
+
+      textEl.append('tspan')
+        .attr('x', 0)
+        .attr('dy', '1.15em')
+        .attr('font-size', '10px')
+        .attr('font-weight', '700')
+        .attr('fill', 'rgba(255, 255, 255, 0.92)')
+        .text(words.slice(1).join(' '));
+
+      textEl.append('tspan')
+        .attr('x', 0)
+        .attr('dy', '1.25em')
+        .attr('font-size', '9px')
+        .attr('font-weight', '600')
+        .attr('fill', 'rgba(255, 255, 255, 0.75)')
+        .text(`${d.data.quakeCount} Quake${d.data.quakeCount === 1 ? '' : 's'}`);
+    } else {
+      textEl.append('tspan')
+        .attr('x', 0)
+        .attr('dy', '-0.25em')
+        .attr('font-size', '12px')
+        .attr('font-weight', '800')
+        .text(fullName);
+
+      textEl.append('tspan')
+        .attr('x', 0)
+        .attr('dy', '1.2em')
+        .attr('font-size', '9px')
+        .attr('font-weight', '600')
+        .attr('fill', 'rgba(255, 255, 255, 0.75)')
+        .text(`${d.data.quakeCount} Quake${d.data.quakeCount === 1 ? '' : 's'}`);
+    }
+  });
 
   piePaths.on('mouseenter', function(event, d) {
     if (!isGameRunning || isPlayerTurn) {
@@ -877,6 +963,15 @@ function renderPie(regionsData) {
 }
 
 renderPie(regions);
+
+// Responsive window resize & tablet orientation listener with debounce
+let resizeDebounce = null;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeDebounce);
+  resizeDebounce = setTimeout(() => {
+    renderPie(regions);
+  }, 100);
+});
 
 // ============================================================================
 // 5. 3D ORTHOGRAPHIC WORLD MAP WITH CINEMATIC ZOOM FLY-THROUGH

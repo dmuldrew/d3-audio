@@ -99,18 +99,32 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 256px;
-      height: 256px;
+      width: 216px;
+      height: 216px;
       border-radius: 50%;
       clip-path: circle(50% at 50% 50%);
       overflow: hidden;
-      box-shadow: 0 0 40px rgba(0, 0, 0, 0.95), inset 0 0 25px rgba(56, 189, 248, 0.25);
+      box-shadow: 0 0 35px rgba(0, 0, 0, 0.95), inset 0 0 25px rgba(56, 189, 248, 0.25);
       border: 3px solid rgba(56, 189, 248, 0.35);
       display: flex;
       justify-content: center;
       align-items: center;
       z-index: 5;
       background: #020614;
+      transition: width 0.2s ease, height 0.2s ease;
+    }
+
+    @media (max-width: 1280px) {
+      .center-globe-box {
+        width: 196px;
+        height: 196px;
+      }
+    }
+
+    .slice-label {
+      pointer-events: none;
+      user-select: none;
+      filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.9));
     }
 
     .globe-hud-top {
