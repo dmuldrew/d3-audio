@@ -681,14 +681,51 @@ function updateDatasetDisplay() {
   }
 }
 
-function loadHistoricalTimeline() {
-  currentDatasetMode = 'historical';
-  activeDateLabel = '1700–2024 (Centuries)';
-  earthquakeTimeline = [...CURATED_EARTHQUAKES];
-  syncRegionsWithTimeline(earthquakeTimeline);
-  renderPie(regions);
+// ----------------------------------------------------------------------------
+// Game State & Synchronized UI Helpers (Main Chart Corner HUD & Sidebar Stats)
+// ----------------------------------------------------------------------------
+let playerStep = 0;
+let isPlayerTurn = false;
+let currentRound = 1;
+let currentScore = 0;
+let highStreak = 0;
+let isGameRunning = false;
+const exploredSet = new Set();
 
-  // Reset Simon Game if running
+function updateScoreUI(score) {
+  currentScore = score;
+  const el = document.getElementById('score-val');
+  if (el) el.innerText = score;
+  const cornerEl = document.getElementById('corner-score-val');
+  if (cornerEl) cornerEl.innerText = score;
+}
+
+function updateStreakUI(streak) {
+  highStreak = streak;
+  const el = document.getElementById('streak-val');
+  if (el) el.innerText = streak;
+  const cornerEl = document.getElementById('corner-streak-val');
+  if (cornerEl) cornerEl.innerText = streak;
+}
+
+function updateExploredUI(count, total) {
+  const str = `${count}/${total}`;
+  const el = document.getElementById('unlocked-val');
+  if (el) el.innerText = str;
+  const cornerEl = document.getElementById('corner-unlocked-val');
+  if (cornerEl) cornerEl.innerText = str;
+}
+
+function updateGameCornerPill(text, color = 'var(--gold)', bg = 'rgba(251, 191, 36, 0.15)', border = 'rgba(251, 191, 36, 0.3)') {
+  const pill = document.getElementById('corner-game-status');
+  if (!pill) return;
+  pill.innerText = text;
+  pill.style.color = color;
+  pill.style.background = bg;
+  pill.style.borderColor = border;
+}
+
+function resetGameState() {
   isGameRunning = false;
   isPlayerTurn = false;
   playerStep = 0;
@@ -704,11 +741,23 @@ function loadHistoricalTimeline() {
     gameBadge.style.background = "rgba(16, 185, 129, 0.15)";
     gameBadge.style.color = "#10b981";
   }
+  updateGameCornerPill('READY', '#10b981', 'rgba(16, 185, 129, 0.15)', 'rgba(16, 185, 129, 0.3)');
   updateTurnIndicator("Start", "start");
-  const scoreVal = document.getElementById('score-val');
-  if (scoreVal) scoreVal.innerText = '0';
+  updateScoreUI(0);
   const roundNum = document.getElementById('round-num');
   if (roundNum) roundNum.innerText = '1';
+  const stepTracker = document.getElementById('step-tracker');
+  if (stepTracker) stepTracker.innerText = "Ready";
+}
+
+function loadHistoricalTimeline() {
+  currentDatasetMode = 'historical';
+  activeDateLabel = '1700–2024 (Centuries)';
+  earthquakeTimeline = [...CURATED_EARTHQUAKES];
+  syncRegionsWithTimeline(earthquakeTimeline);
+  renderPie(regions);
+
+  resetGameState();
 
   // Highlight default Cascadia event
   const initQuake = earthquakeTimeline[0];
@@ -784,15 +833,17 @@ function getPieMetrics() {
   const globeW = globeEl ? (globeEl.offsetWidth || 216) : 216;
   const globeRadius = Math.round(globeW / 2);
 
-  // Guaranteed safe clearance: donut inner hole is ALWAYS outside the globe with 16px buffer
-  const innerRadius = Math.max(116, globeRadius + 16);
+  // Strictly bounded outer radius:
+  // With center at boxH/2 (~300px), outerRadius <= 210px ensures the pie top stays at y >= 90px
+  // and pie bottom stays at y <= 510px. This leaves guaranteed >= 26px clear dark space from
+  // all 4 corner HUD cards (top cards at y <= 82px, bottom cards at y >= 520px).
+  const outerRadius = Math.min(Math.round(minDim / 2) - 34, 210);
 
-  // Outer radius sized to fit comfortably inside the box without touching corners or outer edges
-  const maxOuter = Math.min(Math.round(minDim / 2) - 24, 252);
-  const outerRadius = Math.max(innerRadius + 85, maxOuter);
+  // Inner radius: guaranteed 14px buffer outside globe, leaving >= 80px ring thickness for labels
+  const innerRadius = Math.min(globeRadius + 14, outerRadius - 80);
 
-  // Label centroid positioned at 56% of radial thickness (pushed outwards, far away from globe)
-  const labelRadius = innerRadius + (outerRadius - innerRadius) * 0.56;
+  // Label centroid positioned at 54% of radial thickness (centered within the slice)
+  const labelRadius = innerRadius + (outerRadius - innerRadius) * 0.54;
 
   return { boxW, boxH, innerRadius, outerRadius, labelRadius };
 }
@@ -1582,6 +1633,7 @@ function updateCornerStats(region, quake) {
   if (magClassEl) {
     magClassEl.innerText = magClass;
     magClassEl.style.color = magColor;
+    magClassEl.title = magClass;
   }
 
   const depthEl = document.getElementById('corner-depth-val');
@@ -1655,7 +1707,7 @@ function updateFactCard(region, quake) {
   `;
   document.getElementById('info-desc').innerText = quake.fact || region.fact;
   exploredSet.add(region.id);
-  document.getElementById('unlocked-val').innerText = `${exploredSet.size}/${regions.length}`;
+  updateExploredUI(exploredSet.size, regions.length);
 }
 
 function handleExploreRegion(regionId, domElement, region) {
@@ -1676,13 +1728,6 @@ function handleExploreRegion(regionId, domElement, region) {
 // ============================================================================
 // 7. SEISMIC SIMON ENGINE: ORDER OF OCCURRENCE BY REGION
 // ============================================================================
-let playerStep = 0;
-let isPlayerTurn = false;
-let currentRound = 1;
-let currentScore = 0;
-let highStreak = 0;
-let isGameRunning = false;
-const exploredSet = new Set();
 
 function updateTurnIndicator(text, mode = 'watch') {
   const indicator = document.getElementById('turn-indicator');
@@ -1730,7 +1775,7 @@ async function startNewGame() {
   currentScore = 0;
   isGameRunning = true;
 
-  document.getElementById('score-val').innerText = '0';
+  updateScoreUI(0);
   document.getElementById('round-num').innerText = '1';
   const startBtn = document.getElementById('start-game-btn');
   if (startBtn) {
@@ -1740,6 +1785,7 @@ async function startNewGame() {
   document.getElementById('game-status-badge').innerText = "Round 1 Active";
   document.getElementById('game-status-badge').style.background = "rgba(56, 189, 248, 0.2)";
   document.getElementById('game-status-badge').style.color = "#38bdf8";
+  updateGameCornerPill('ACTIVE', '#38bdf8', 'rgba(56, 189, 248, 0.15)', 'rgba(56, 189, 248, 0.3)');
   updateTurnIndicator("Watch", "watch");
 
   nextRound();
@@ -1802,12 +1848,12 @@ function handlePlayerInput(clickedRegionId, domElement, clickedRegion) {
     activateRegionSlice(expectedRegion, expectedQuake, domElement, false);
     playerStep++;
     currentScore += 10 * currentRound;
-    document.getElementById('score-val').innerText = currentScore;
+    updateScoreUI(currentScore);
     updateStepIndicator(playerStep, currentRound);
 
     if (playerStep > highStreak) {
       highStreak = playerStep;
-      document.getElementById('streak-val').innerText = highStreak;
+      updateStreakUI(highStreak);
     }
 
     if (playerStep === currentRound) {
@@ -1825,6 +1871,7 @@ function handlePlayerInput(clickedRegionId, domElement, clickedRegion) {
         document.getElementById('game-status-badge').innerText = "Timeline Mastered!";
         document.getElementById('game-status-badge').style.background = "rgba(251, 191, 36, 0.2)";
         document.getElementById('game-status-badge').style.color = "#fbbf24";
+        updateGameCornerPill('MASTER', '#fbbf24', 'rgba(251, 191, 36, 0.2)', 'rgba(251, 191, 36, 0.4)');
 
         document.getElementById('info-title').innerHTML = `🏆 Full Seismic Timeline Mastered!`;
         document.getElementById('info-desc').innerText = `Phenomenal memory! You successfully reproduced all ${earthquakeTimeline.length} earthquakes across the globe in their exact chronological order of occurrence! Final Score: ${currentScore}.`;
@@ -1850,6 +1897,7 @@ function handlePlayerInput(clickedRegionId, domElement, clickedRegion) {
     document.getElementById('game-status-badge').innerText = "Seismic Fault Break!";
     document.getElementById('game-status-badge').style.background = "rgba(244, 63, 94, 0.2)";
     document.getElementById('game-status-badge').style.color = "#f43f5e";
+    updateGameCornerPill('BREAK', '#f43f5e', 'rgba(244, 63, 94, 0.2)', 'rgba(244, 63, 94, 0.4)');
 
     drums.trigger("snare", "8n", undefined, 1.0);
     g.selectAll('.pie-slice').each(function() {

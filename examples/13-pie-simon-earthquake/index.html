@@ -119,6 +119,15 @@
         width: 196px;
         height: 196px;
       }
+      .quake-corner-tl {
+        width: 185px;
+      }
+      .quake-corner-tr {
+        width: 165px;
+      }
+      .quake-corner-bl {
+        width: 195px;
+      }
     }
 
     .slice-label {
@@ -203,7 +212,7 @@
       -webkit-backdrop-filter: blur(10px);
       border: 1px solid rgba(56, 189, 248, 0.28);
       border-radius: 8px;
-      padding: 0.4rem 0.6rem;
+      padding: 0.35rem 0.5rem;
       box-shadow: 0 4px 18px rgba(0, 0, 0, 0.85);
       transition: all 0.2s ease;
       box-sizing: border-box;
@@ -211,20 +220,25 @@
     .quake-corner-tl {
       top: 10px;
       left: 10px;
-      width: 245px;
+      width: 195px;
     }
     .quake-corner-tr {
       top: 10px;
       right: 10px;
+      width: 175px;
+    }
+    .quake-corner-bl {
+      bottom: 12px;
+      left: 12px;
       width: 215px;
     }
     .corner-card-header {
       display: flex;
       align-items: center;
-      gap: 0.4rem;
-      margin-bottom: 0.35rem;
+      gap: 0.35rem;
+      margin-bottom: 0.3rem;
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      padding-bottom: 0.25rem;
+      padding-bottom: 0.2rem;
     }
     .quake-corner-tr .corner-card-header {
       justify-content: flex-end;
@@ -243,7 +257,7 @@
       50% { opacity: 0.4; transform: scale(0.8); }
     }
     .corner-header-title {
-      font-size: 0.68rem;
+      font-size: 0.65rem;
       font-weight: 800;
       color: var(--text);
       white-space: nowrap;
@@ -264,10 +278,22 @@
       letter-spacing: 0.04em;
       flex-shrink: 0;
     }
+    .corner-game-pill {
+      font-size: 0.52rem;
+      font-weight: 900;
+      color: var(--gold);
+      background: rgba(251, 191, 36, 0.15);
+      border: 1px solid rgba(251, 191, 36, 0.3);
+      border-radius: 3px;
+      padding: 1px 4px;
+      letter-spacing: 0.04em;
+      flex-shrink: 0;
+      transition: all 0.2s ease;
+    }
     .corner-body {
       display: flex;
       align-items: center;
-      gap: 0.55rem;
+      gap: 0.45rem;
     }
     .corner-mag-container {
       display: flex;
@@ -277,40 +303,44 @@
       background: rgba(244, 63, 94, 0.14);
       border: 1.5px solid rgba(244, 63, 94, 0.4);
       border-radius: 6px;
-      padding: 0.25rem 0.5rem;
-      min-width: 76px;
+      padding: 0.2rem 0.35rem;
+      min-width: 68px;
       flex-shrink: 0;
       box-sizing: border-box;
       transition: all 0.25s ease;
+      text-align: center;
     }
     .corner-mag-label {
-      font-size: 0.5rem;
+      font-size: 0.48rem;
       font-weight: 800;
       color: #f43f5e;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.05em;
       text-transform: uppercase;
       white-space: nowrap;
     }
     .corner-mag-value {
-      font-size: 1.25rem;
+      font-size: 1.15rem;
       font-weight: 900;
       color: #ffffff;
-      line-height: 1.1;
+      line-height: 1.05;
       white-space: nowrap;
       text-shadow: 0 0 10px rgba(244, 63, 94, 0.5);
     }
     .corner-mag-class {
-      font-size: 0.52rem;
+      font-size: 0.5rem;
       font-weight: 700;
       color: var(--muted);
       white-space: nowrap;
       margin-top: 1px;
       text-align: center;
+      max-width: 72px;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .corner-meta-col {
       display: flex;
       flex-direction: column;
-      gap: 0.18rem;
+      gap: 0.14rem;
       flex: 1;
       min-width: 0;
     }
@@ -318,10 +348,10 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 0.4rem;
+      gap: 0.3rem;
     }
     .corner-meta-label {
-      font-size: 0.52rem;
+      font-size: 0.5rem;
       font-weight: 700;
       color: var(--muted);
       text-transform: uppercase;
@@ -329,7 +359,7 @@
       flex-shrink: 0;
     }
     .corner-meta-val {
-      font-size: 0.68rem;
+      font-size: 0.65rem;
       font-weight: 800;
       color: #fff;
       white-space: nowrap;
@@ -337,32 +367,55 @@
       text-overflow: ellipsis;
       text-align: right;
     }
-      align-items: center;
-      gap: 0.4rem;
-    }
-    .corner-meta-label {
-      font-size: 0.52rem;
-      font-weight: 700;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-    .corner-meta-val {
-      font-size: 0.68rem;
-      font-weight: 800;
-      color: #fff;
-      white-space: nowrap;
-    }
     .corner-telemetry-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 0.3rem;
+      gap: 0.25rem;
     }
     .corner-telemetry-box {
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid rgba(255, 255, 255, 0.06);
       border-radius: 5px;
-      padding: 0.2rem 0.35rem;
+      padding: 0.18rem 0.3rem;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+    .corner-telemetry-val {
+      font-size: 0.68rem;
+      font-weight: 800;
+      color: var(--accent);
+    }
+    .corner-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.25rem;
+    }
+    .corner-stat-tile {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 5px;
+      padding: 0.2rem 0.25rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .corner-stat-label {
+      font-size: 0.48rem;
+      font-weight: 800;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .corner-stat-val {
+      font-size: 0.88rem;
+      font-weight: 900;
+      color: #fff;
+      line-height: 1.1;
+      margin-top: 1px;
+    }
       display: flex;
       flex-direction: column;
       align-items: flex-end;
@@ -427,29 +480,12 @@
     }
     .btn-live:hover { background: #334155; color: #fff; }
 
-    .stats-row {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 1rem;
-    }
-    .stat-box {
-      background: #070c18;
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 8px;
-      padding: 0.75rem;
-      text-align: center;
-      flex: 1;
-      margin: 0 0.25rem;
-    }
-    .stat-label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; font-weight: 700; }
-    .stat-val { font-size: 1.3rem; font-weight: 800; color: #fff; margin-top: 0.2rem; }
-
     /* Dataset Mode Switcher Tabs & Active Banner */
     .dataset-mode-tabs {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 0.5rem;
-      margin-top: 0.85rem;
+      margin-top: 0;
       margin-bottom: 0.65rem;
     }
     .dataset-tab-btn {
@@ -942,6 +978,29 @@
                 </div>
               </div>
 
+              <!-- Bottom-Left Corner: Real-Time Game Stats HUD -->
+              <div class="quake-corner-card quake-corner-bl" id="corner-stats-bl">
+                <div class="corner-card-header">
+                  <span style="font-size: 0.72rem;">🎮</span>
+                  <span class="corner-header-title">GAME STATS</span>
+                  <span class="corner-game-pill" id="corner-game-status">READY</span>
+                </div>
+                <div class="corner-stats-grid">
+                  <div class="corner-stat-tile">
+                    <span class="corner-stat-label">SCORE</span>
+                    <span class="corner-stat-val" id="corner-score-val">0</span>
+                  </div>
+                  <div class="corner-stat-tile">
+                    <span class="corner-stat-label">HIGH STREAK</span>
+                    <span class="corner-stat-val" id="corner-streak-val" style="color: var(--gold);">0</span>
+                  </div>
+                  <div class="corner-stat-tile">
+                    <span class="corner-stat-label">EXPLORED</span>
+                    <span class="corner-stat-val" id="corner-unlocked-val" style="color: var(--accent);">0/6</span>
+                  </div>
+                </div>
+              </div>
+
               <!-- Lower-Right Corner: Start / Restart Game HUD Action Button in Main Pane -->
               <div class="quake-corner-br" id="chart-start-container">
                 <button id="start-game-btn" class="btn-chart-start" title="Start Seismic Simon Sequence Playback">
@@ -1107,21 +1166,6 @@
 
       <!-- Sidebar / Educational Knowledge Hub -->
       <div class="panel">
-        <div class="stats-row">
-          <div class="stat-box">
-            <div class="stat-label">Score</div>
-            <div class="stat-val" id="score-val">0</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-label">High Streak</div>
-            <div class="stat-val" id="streak-val" style="color: var(--gold);">0</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-label">Regions Explored</div>
-            <div class="stat-val" id="unlocked-val" style="color: var(--accent);">0/6</div>
-          </div>
-        </div>
-
         <!-- Dataset Mode Switcher Tabs (4 Chronological Modes) -->
         <div class="dataset-mode-tabs">
           <button id="tab-mode-historical" class="dataset-tab-btn active" title="Curated Historic Megathrusts (1700–2024)">
