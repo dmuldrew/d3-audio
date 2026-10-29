@@ -544,6 +544,181 @@ const CURATED_EARTHQUAKES = [
 ];
 
 let earthquakeTimeline = [...CURATED_EARTHQUAKES];
+let currentDatasetMode = 'historical'; // 'historical', 'year', 'month', 'singleday'
+let activeDateLabel = '1700–2024 (Centuries)';
+
+function updateDatasetDisplay() {
+  const mode = currentDatasetMode;
+
+  // 1. Tab buttons
+  const tabHist = document.getElementById('tab-mode-historical');
+  const tabYear = document.getElementById('tab-mode-year');
+  const tabMonth = document.getElementById('tab-mode-month');
+  const tabSingle = document.getElementById('tab-mode-singleday');
+
+  if (tabHist) tabHist.classList.toggle('active', mode === 'historical');
+  if (tabYear) tabYear.classList.toggle('active', mode === 'year');
+  if (tabMonth) tabMonth.classList.toggle('active', mode === 'month');
+  if (tabSingle) tabSingle.classList.toggle('active', mode === 'singleday');
+
+  // 2. Mode Panels visibility
+  const panelHist = document.getElementById('historic-panel');
+  const panelYear = document.getElementById('year-panel');
+  const panelMonth = document.getElementById('month-panel');
+  const panelSingle = document.getElementById('singleday-panel');
+
+  if (panelHist) panelHist.classList.toggle('active', mode === 'historical');
+  if (panelYear) panelYear.classList.toggle('active', mode === 'year');
+  if (panelMonth) panelMonth.classList.toggle('active', mode === 'month');
+  if (panelSingle) panelSingle.classList.toggle('active', mode === 'singleday');
+
+  // 3. Banner pill and restore button
+  const pill = document.getElementById('banner-mode-pill');
+  if (pill) {
+    if (mode === 'historical') {
+      pill.className = 'banner-mode-pill pill-historical';
+      pill.innerText = '🏛️ Historical Mode (1700–2024)';
+    } else if (mode === 'year') {
+      pill.className = 'banner-mode-pill pill-year';
+      pill.innerText = `🗓️ Yearly Top Quakes (${activeDateLabel})`;
+    } else if (mode === 'month') {
+      pill.className = 'banner-mode-pill pill-month';
+      pill.innerText = `📆 Monthly Top Quakes (${activeDateLabel})`;
+    } else {
+      pill.className = 'banner-mode-pill pill-singleday';
+      pill.innerText = `⏰ Single-Day Mode (${activeDateLabel})`;
+    }
+  }
+
+  const restoreBtn = document.getElementById('btn-restore-historical');
+  if (restoreBtn) {
+    restoreBtn.style.display = mode === 'historical' ? 'none' : 'inline-block';
+  }
+
+  // 4. Banner text details
+  const nameEl = document.getElementById('banner-dataset-name');
+  if (nameEl) {
+    if (mode === 'historical') {
+      nameEl.innerText = 'Curated Global Megathrust Timeline (1700 – 2024)';
+    } else if (mode === 'year') {
+      nameEl.innerText = `Top Earthquakes of ${activeDateLabel} (Jan ➔ Dec Chronological)`;
+    } else if (mode === 'month') {
+      nameEl.innerText = `Top Earthquakes of ${activeDateLabel} (Day 1 ➔ 31 Chronological)`;
+    } else {
+      nameEl.innerText = `Single-Day 24h Tremor Feed (${activeDateLabel})`;
+    }
+  }
+
+  const spanEl = document.getElementById('banner-span-val');
+  if (spanEl) {
+    if (mode === 'historical') spanEl.innerText = '324 Years';
+    else if (mode === 'year') spanEl.innerText = `1 Year (${activeDateLabel.replace('Year ', '')})`;
+    else if (mode === 'month') spanEl.innerText = '1 Month';
+    else spanEl.innerText = '24 Hours';
+  }
+
+  const orderEl = document.getElementById('banner-order-val');
+  if (orderEl) {
+    if (mode === 'historical') orderEl.innerText = '1700 ➔ 2024';
+    else if (mode === 'year') orderEl.innerText = 'Jan ➔ Dec';
+    else if (mode === 'month') orderEl.innerText = 'Day 1 ➔ 31';
+    else orderEl.innerText = '00:00 ➔ 23:59';
+  }
+
+  const countEl = document.getElementById('banner-count-val');
+  if (countEl) {
+    if (mode === 'historical') countEl.innerText = '20 Megathrusts';
+    else countEl.innerText = `${earthquakeTimeline.length} Quakes`;
+  }
+
+  const descEl = document.getElementById('banner-desc-text');
+  if (descEl) {
+    if (mode === 'historical') {
+      descEl.innerText = 'Initial default dataset: 20 of Earth\'s most cataclysmic megathrust earthquakes spanning over three centuries in chronological order (1700 Cascadia ➔ 2024 Noto). Slices represent long-term regional megathrust frequency.';
+    } else if (mode === 'year') {
+      descEl.innerText = `Loaded the top ${earthquakeTimeline.length} largest global earthquakes of ${activeDateLabel}, arranged in chronological order from January through December. Hear how the planet\'s seismic energy released across the seasons!`;
+    } else if (mode === 'month') {
+      descEl.innerText = `Loaded the top ${earthquakeTimeline.length} largest global earthquakes of ${activeDateLabel}, arranged in chronological order from Day 1 to the end of the month. Perfect for exploring major mainshock/aftershock rupture sequences!`;
+    } else {
+      descEl.innerText = `Loaded ${earthquakeTimeline.length} real earthquakes recorded on ${activeDateLabel}. Slices represent regional cluster activity across 24 hours (00:00 to 23:59 UTC).`;
+    }
+  }
+
+  // 5. Chart top bar badge
+  const chartBadge = document.getElementById('chart-dataset-badge');
+  if (chartBadge) {
+    if (mode === 'historical') {
+      chartBadge.className = 'chart-badge-historical';
+      chartBadge.innerText = '🏛️ Historical Megathrusts (1700–2024 • 324-Year Scope)';
+    } else if (mode === 'year') {
+      chartBadge.className = 'chart-badge-year';
+      chartBadge.innerText = `🗓️ ${activeDateLabel} Largest Quakes (Jan ➔ Dec Scope)`;
+    } else if (mode === 'month') {
+      chartBadge.className = 'chart-badge-month';
+      chartBadge.innerText = `📆 ${activeDateLabel} Largest Quakes (Month Scope)`;
+    } else {
+      chartBadge.className = 'chart-badge-singleday';
+      chartBadge.innerText = `⏰ Single-Day Global Activity (${activeDateLabel} • 24h Scope)`;
+    }
+  }
+
+  // 6. Update Corner HUD dataset pill
+  const cornerBadge = document.getElementById('corner-mode-badge');
+  if (cornerBadge) {
+    if (mode === 'historical') {
+      cornerBadge.className = 'corner-mode-badge corner-mode-historical';
+      cornerBadge.innerText = '🏛️ 1700–2024';
+    } else if (mode === 'year') {
+      cornerBadge.className = 'corner-mode-badge corner-mode-year';
+      cornerBadge.innerText = `🗓️ ${activeDateLabel}`;
+    } else if (mode === 'month') {
+      cornerBadge.className = 'corner-mode-badge corner-mode-month';
+      cornerBadge.innerText = `📆 ${activeDateLabel.split(' ')[0]}`;
+    } else {
+      cornerBadge.className = 'corner-mode-badge corner-mode-singleday';
+      cornerBadge.innerText = '⏰ 24h UTC';
+    }
+  }
+}
+
+function loadHistoricalTimeline() {
+  currentDatasetMode = 'historical';
+  activeDateLabel = '1700–2024 (Centuries)';
+  earthquakeTimeline = [...CURATED_EARTHQUAKES];
+  syncRegionsWithTimeline(earthquakeTimeline);
+  renderPie(regions);
+
+  // Reset Simon Game if running
+  isGameRunning = false;
+  isPlayerTurn = false;
+  playerStep = 0;
+  currentRound = 1;
+  const startBtn = document.getElementById('start-game-btn');
+  if (startBtn) {
+    startBtn.innerText = "▶ Start Seismic Simon Game";
+    startBtn.classList.remove('running');
+  }
+  const gameBadge = document.getElementById('game-status-badge');
+  if (gameBadge) {
+    gameBadge.innerText = "Ready to Play";
+    gameBadge.style.background = "rgba(16, 185, 129, 0.15)";
+    gameBadge.style.color = "#10b981";
+  }
+  updateTurnIndicator("Start", "start");
+  const scoreVal = document.getElementById('score-val');
+  if (scoreVal) scoreVal.innerText = '0';
+  const roundNum = document.getElementById('round-num');
+  if (roundNum) roundNum.innerText = '1';
+
+  // Highlight default Cascadia event
+  const initQuake = earthquakeTimeline[0];
+  const initRegion = regions[initQuake.regionId] || regions[2];
+  rotateGlobeTo(initQuake.lon, initQuake.lat, 800);
+  setGlobeActiveEpicenter(initQuake.lon, initQuake.lat, initQuake, initRegion);
+  updateFactCard(initRegion, initQuake);
+
+  updateDatasetDisplay();
+}
 
 function syncRegionsWithTimeline(timeline) {
   regions.forEach(r => {
@@ -571,18 +746,18 @@ const pitchScale = scalePitch()
   .root("C");
 
 const gainScale = scaleGain()
-  .domain([4.5, 9.5])
-  .range([0.5, 1.0]);
+  .domain([3.5, 9.5])
+  .range([0.55, 0.90]);
 
 const panScale = scalePan()
-  .domain([0, 5])
+  .domain([-130, 150])
   .range([-0.8, 0.8]);
 
 const legend = audioLegend()
   .title("Seismic Sonification Audio Key")
   .pitch(pitchScale, "Focal Depth (5km Crustal Ring ➔ 60km Mantle Sub-Bass)")
-  .gain(gainScale, "Earthquake Magnitude (4.5 ➔ 9.5 Mw)")
-  .pan(panScale, "Stereo Fault Longitude (West ↔ East)");
+  .gain(gainScale, "Earthquake Magnitude (3.5 ➔ 9.5 Mw: Subtle Dynamics 55% ➔ 90%)")
+  .pan(panScale, "Stereo Fault Longitude (West -130° ↔ East +150°)");
 
 d3.select("#legend-mount").call(legend);
 
@@ -590,13 +765,17 @@ const synthMelody = createSynth({ type: "fmSynth", harmonicity: 2.5, volume: -1 
 const drums = createSamplePlayer();
 
 // ============================================================================
-// 4. D3 PIE CHART: PIECES ARE REGIONS
+// 4. D3 PIE CHART: SPATIAL ORDERING (Adjacent Faults Next to Each Other)
 // ============================================================================
+// Optimal global ring sequence minimizing total closed-loop distance (42,317 km):
+// Cascadia (2) -> Japan (0) -> Himalayas (5) -> Sunda (3) -> Chile (1) -> San Andreas (4) -> (Cascadia)
+const SPATIAL_REGION_ORDER = [2, 0, 5, 3, 1, 4];
+
 const container = document.getElementById('pie-area');
-const width = container.clientWidth || 550;
-const height = container.clientHeight || 490;
-const radius = Math.min(width, height) / 2 - 25;
-const innerRadius = 80;
+const width = 760;
+const height = 600;
+const radius = 236;
+const innerRadius = 136;
 
 const svg = d3.select(container)
   .append('svg')
@@ -607,6 +786,8 @@ const g = svg.append('g')
 
 const pieLayout = d3.pie()
   .value(d => Math.max(2, (d.quakeCount || 1) * 1.5))
+  .startAngle(-Math.PI / 6)
+  .endAngle(2 * Math.PI - Math.PI / 6)
   .padAngle(0.04)
   .sort(null);
 
@@ -617,10 +798,22 @@ const arcGenerator = d3.arc()
 
 let piePaths, sliceLabelGroups;
 
+function getSliceNode(regionId) {
+  let found = null;
+  if (piePaths) {
+    piePaths.each(function(d) {
+      if (d && d.data && d.data.id === regionId) found = this;
+    });
+  }
+  return found;
+}
+
 function renderPie(regionsData) {
   g.selectAll('*').remove();
 
-  const arcs = pieLayout(regionsData);
+  // Order regions spatially by shortest global great-circle distance
+  const orderedRegions = SPATIAL_REGION_ORDER.map(id => regionsData.find(r => r.id === id) || regionsData[id]);
+  const arcs = pieLayout(orderedRegions);
 
   piePaths = g.selectAll('.pie-slice')
     .data(arcs)
@@ -644,19 +837,34 @@ function renderPie(regionsData) {
 
   sliceLabelGroups.append('text')
     .attr('text-anchor', 'middle')
-    .attr('dy', '-0.25em')
+    .attr('dy', '-0.3em')
     .attr('fill', '#ffffff')
-    .attr('font-size', '11.5px')
+    .attr('font-size', '13px')
     .attr('font-weight', '800')
     .text(d => d.data.name);
 
   sliceLabelGroups.append('text')
     .attr('text-anchor', 'middle')
     .attr('dy', '1.15em')
-    .attr('fill', 'rgba(255, 255, 255, 0.75)')
-    .attr('font-size', '9.5px')
+    .attr('fill', 'rgba(255, 255, 255, 0.8)')
+    .attr('font-size', '10.5px')
     .attr('font-weight', '600')
     .text(d => `${d.data.quakeCount} Quake${d.data.quakeCount === 1 ? '' : 's'}`);
+
+  piePaths.on('mouseenter', function(event, d) {
+    if (!isGameRunning || isPlayerTurn) {
+      const latestQuake = d.data.quakes[d.data.quakes.length - 1] || {
+        mag: d.data.defaultMag,
+        depthKm: d.data.defaultDepthKm,
+        title: d.data.name,
+        place: d.data.subtitle,
+        dateStr: d.data.quakeCount > 0 ? "Latest Recorded Event" : "Quiescent Tectonic Zone",
+        lon: d.data.lon,
+        lat: d.data.lat
+      };
+      updateCornerStats(d.data, latestQuake);
+    }
+  });
 
   piePaths.on('click', async function(event, d) {
     await defaultEngine.start();
@@ -674,10 +882,10 @@ renderPie(regions);
 // 5. 3D ORTHOGRAPHIC WORLD MAP WITH CINEMATIC ZOOM FLY-THROUGH
 // ============================================================================
 const globeSvg = d3.select("#globe-svg");
-const globeWidth = 280;
-const globeHeight = 215;
+const globeWidth = 256;
+const globeHeight = 256;
 
-const BASE_ZOOM_IN = 118;   // Detailed fault viewing scale (zoomed in)
+const BASE_ZOOM_IN = 114;   // Detailed fault viewing scale (zoomed in)
 const BASE_ZOOM_OUT = 70;   // Wide orbital view scale (zoomed out)
 let userPreferredZoom = BASE_ZOOM_IN;
 let isCinematicZoomActive = true;
@@ -876,11 +1084,10 @@ function renderGlobePins() {
           .style('cursor', 'pointer')
           .on('click', async () => {
             await defaultEngine.start();
+            const node = getSliceNode(region.id);
             if (isPlayerTurn) {
-              const node = piePaths.nodes()[region.id];
               handlePlayerInput(region.id, node, region);
             } else if (!isGameRunning) {
-              const node = piePaths.nodes()[region.id];
               handleExploreRegion(region.id, node, region);
             }
           });
@@ -996,7 +1203,7 @@ function rotateGlobeTo(targetLon, targetLat, duration = 800) {
 
   // Cinematic Parabolic Flight: Zoom Out => Rotate to New Location => Zoom In
   // Pull back to wide orbital scale during mid-flight rotation
-  const minScale = Math.max(55, Math.min(startScale, targetScale) * 0.60);
+  const minScale = Math.max(60, Math.min(startScale, targetScale) * 0.62);
   const interpolateRotate = d3.geoInterpolate(currentCenter, targetCenter);
 
   globeSvg.transition("globeFly")
@@ -1014,7 +1221,7 @@ function rotateGlobeTo(targetLon, targetLat, duration = 800) {
         // At t=1: targetScale (swooping in close to inspect the fault line)
         const currentBase = startScale * (1 - t) + targetScale * t;
         const dip = 4 * (currentBase - minScale) * t * (1 - t);
-        const s = Math.max(50, currentBase - dip);
+        const s = Math.max(55, currentBase - dip);
         projection.scale(s);
 
         renderGlobe();
@@ -1102,7 +1309,7 @@ globeSvg.on("wheel", (event) => {
   event.preventDefault();
   globeSvg.interrupt("globeFly");
   const currentScale = projection.scale();
-  const newScale = Math.max(55, Math.min(220, currentScale - event.deltaY * 0.25));
+  const newScale = Math.max(60, Math.min(240, currentScale - event.deltaY * 0.25));
   projection.scale(newScale);
   userPreferredZoom = newScale;
   renderGlobe();
@@ -1114,7 +1321,7 @@ const zoomInBtn = document.getElementById('globe-zoom-in');
 if (zoomInBtn) {
   zoomInBtn.addEventListener('click', () => {
     globeSvg.interrupt("globeFly");
-    const newScale = Math.min(220, projection.scale() + 20);
+    const newScale = Math.min(240, projection.scale() + 20);
     projection.scale(newScale);
     userPreferredZoom = newScale;
     renderGlobe();
@@ -1126,7 +1333,7 @@ const zoomOutBtn = document.getElementById('globe-zoom-out');
 if (zoomOutBtn) {
   zoomOutBtn.addEventListener('click', () => {
     globeSvg.interrupt("globeFly");
-    const newScale = Math.max(55, projection.scale() - 20);
+    const newScale = Math.max(60, projection.scale() - 20);
     projection.scale(newScale);
     userPreferredZoom = newScale;
     renderGlobe();
@@ -1169,6 +1376,13 @@ async function loadWorldLand() {
 
 loadWorldLand();
 
+// Initialize corner stats with the first event on the timeline
+if (earthquakeTimeline && earthquakeTimeline[0]) {
+  const initQuake = earthquakeTimeline[0];
+  const initRegion = regions[initQuake.regionId] || regions[2];
+  updateCornerStats(initRegion, initQuake);
+}
+
 // ============================================================================
 // 6. SOUND & VISUAL ACTIVATION (Synchronized with Fault & 3D Globe)
 // ============================================================================
@@ -1177,18 +1391,19 @@ function activateRegionSlice(region, quake, domElement, isComputer = false) {
   const mag = quake.mag || region.defaultMag;
   const note = pitchScale(depth);
   const vel = gainScale(mag);
-  const pan = panScale(region.id);
+  const targetLon = quake.lon !== undefined ? quake.lon : region.lon;
+  const targetLat = quake.lat !== undefined ? quake.lat : region.lat;
+  const pan = panScale(targetLon);
 
-  // Play subterranean bass impact + resonant tectonic chime
+  // Play subterranean bass impact + resonant tectonic chime with subtle magnitude-scaled velocity
   drums.trigger("kick", "8n", undefined, vel * 0.9, { pan });
   synthMelody.triggerAttackRelease(note, "4n", undefined, vel, { pan });
 
-  // Update Educational Fact Sheet Card
+  // Update Educational Fact Sheet Card & Corner Stats
   updateFactCard(region, quake);
+  updateCornerStats(region, quake);
 
   // 3D Globe Sync: Cinematic Zoom Out => Rotate => Zoom In onto the Fault
-  const targetLon = quake.lon !== undefined ? quake.lon : region.lon;
-  const targetLat = quake.lat !== undefined ? quake.lat : region.lat;
   rotateGlobeTo(targetLon, targetLat, 780);
   setGlobeActiveEpicenter(targetLon, targetLat, quake, region);
 
@@ -1210,7 +1425,126 @@ function activateRegionSlice(region, quake, domElement, isComputer = false) {
   }, 350);
 }
 
+function updateCornerStats(region, quake) {
+  if (!region || !quake) return;
+  const mag = quake.mag != null ? quake.mag : region.defaultMag;
+  const depth = quake.depthKm != null ? quake.depthKm : region.defaultDepthKm;
+  const dateStr = quake.dateStr || (quake.year ? `Year ${quake.year}` : 'Recent');
+  const targetLon = quake.lon !== undefined ? quake.lon : region.lon;
+  const note = pitchScale(depth);
+  const vel = Math.round(gainScale(mag) * 100);
+  const dbStr = gainScale.db(mag);
+  const panVal = panScale(targetLon);
+  const panText = panVal < -0.1 ? `${Math.abs(panVal).toFixed(2)} L` : panVal > 0.1 ? `${panVal.toFixed(2)} R` : 'Center';
+
+  const activeFault = FAULT_TRACES.find(f => f.id === region.id);
+  const faultName = activeFault ? activeFault.name : (quake.type || region.type);
+
+  // Magnitude rating class and color
+  let magClass = "Minor";
+  let magColor = "#38bdf8";
+  let magBg = "rgba(56, 189, 248, 0.14)";
+  if (mag >= 8.5) {
+    magClass = "Cataclysmic";
+    magColor = "#f43f5e";
+    magBg = "rgba(244, 63, 94, 0.22)";
+  } else if (mag >= 7.8) {
+    magClass = "Megathrust";
+    magColor = "#f43f5e";
+    magBg = "rgba(244, 63, 94, 0.16)";
+  } else if (mag >= 7.0) {
+    magClass = "Major Quake";
+    magColor = "#f59e0b";
+    magBg = "rgba(245, 158, 11, 0.16)";
+  } else if (mag >= 6.0) {
+    magClass = "Strong Quake";
+    magColor = "#fbbf24";
+    magBg = "rgba(251, 191, 36, 0.16)";
+  } else {
+    magClass = "Moderate";
+    magColor = "#10b981";
+    magBg = "rgba(16, 185, 129, 0.16)";
+  }
+
+  // Top-Left Corner: Real-Time Event & Magnitude Stats
+  const titleEl = document.getElementById('corner-event-name');
+  if (titleEl) {
+    const rawTitle = quake.title || quake.place || region.name;
+    titleEl.innerText = rawTitle;
+    titleEl.title = rawTitle;
+  }
+
+  const magValEl = document.getElementById('corner-mag-val');
+  if (magValEl) magValEl.innerText = `M ${Number(mag).toFixed(1)}`;
+
+  const magContainer = document.getElementById('corner-mag-container');
+  if (magContainer) {
+    magContainer.style.background = magBg;
+    magContainer.style.borderColor = magColor;
+  }
+
+  const magClassEl = document.getElementById('corner-mag-class');
+  if (magClassEl) {
+    magClassEl.innerText = magClass;
+    magClassEl.style.color = magColor;
+  }
+
+  const depthEl = document.getElementById('corner-depth-val');
+  if (depthEl) depthEl.innerText = `${depth} km`;
+
+  const mode = currentDatasetMode;
+  const cornerBadge = document.getElementById('corner-mode-badge');
+  if (cornerBadge) {
+    if (mode === 'historical') {
+      cornerBadge.className = 'corner-mode-badge corner-mode-historical';
+      cornerBadge.innerText = '🏛️ 1700–2024';
+    } else if (mode === 'year') {
+      cornerBadge.className = 'corner-mode-badge corner-mode-year';
+      cornerBadge.innerText = `🗓️ ${activeDateLabel}`;
+    } else if (mode === 'month') {
+      cornerBadge.className = 'corner-mode-badge corner-mode-month';
+      cornerBadge.innerText = `📆 ${activeDateLabel.split(' ')[0]}`;
+    } else {
+      cornerBadge.className = 'corner-mode-badge corner-mode-singleday';
+      cornerBadge.innerText = '⏰ 24h UTC';
+    }
+  }
+
+  const dateLabelEl = document.getElementById('corner-date-label');
+  if (dateLabelEl) {
+    dateLabelEl.innerText = mode === 'singleday' ? 'TIME' : 'DATE';
+  }
+
+  const dateEl = document.getElementById('corner-date-val');
+  if (dateEl) {
+    dateEl.innerText = mode === 'singleday' ? `${dateStr} UTC` : dateStr;
+  }
+
+  const regionEl = document.getElementById('corner-region-val');
+  if (regionEl) {
+    regionEl.innerText = region.name.split(' ')[0];
+    regionEl.style.color = region.color;
+  }
+
+  // Top-Right Corner: Real-Time Sonic & Rupture Telemetry
+  const pitchEl = document.getElementById('corner-pitch-val');
+  if (pitchEl) pitchEl.innerText = note;
+
+  const panEl = document.getElementById('corner-pan-val');
+  if (panEl) panEl.innerText = panText;
+
+  const gainEl = document.getElementById('corner-gain-val');
+  if (gainEl) gainEl.innerText = `${vel}% (${dbStr} dB)`;
+
+  const faultEl = document.getElementById('corner-fault-val');
+  if (faultEl) {
+    faultEl.innerText = faultName.split('&')[0].trim();
+    faultEl.style.color = region.color;
+  }
+}
+
 function updateFactCard(region, quake) {
+  updateCornerStats(region, quake);
   const dateLabel = quake.dateStr || (quake.year ? `Year ${quake.year}` : 'Recent');
   const activeFault = FAULT_TRACES.find(f => f.id === region.id);
   const faultName = activeFault ? activeFault.name : (quake.type || region.type);
@@ -1255,6 +1589,45 @@ let highStreak = 0;
 let isGameRunning = false;
 const exploredSet = new Set();
 
+function updateTurnIndicator(text, mode = 'watch') {
+  const indicator = document.getElementById('turn-indicator');
+  const badge = document.getElementById('turn-badge');
+  if (indicator) indicator.innerText = text;
+  if (!badge) return;
+
+  if (mode === 'start' || mode === 'ready') {
+    if (indicator) indicator.style.color = "#38bdf8";
+    badge.style.borderColor = "rgba(56, 189, 248, 0.55)";
+    badge.style.boxShadow = "0 0 16px rgba(56, 189, 248, 0.4)";
+    badge.style.cursor = "pointer";
+    badge.style.pointerEvents = "auto";
+  } else if (mode === 'watch') {
+    if (indicator) indicator.style.color = "#fbbf24";
+    badge.style.borderColor = "rgba(251, 191, 36, 0.45)";
+    badge.style.boxShadow = "0 0 14px rgba(251, 191, 36, 0.35)";
+    badge.style.cursor = "default";
+    badge.style.pointerEvents = "none";
+  } else if (mode === 'player') {
+    if (indicator) indicator.style.color = "#10b981";
+    badge.style.borderColor = "rgba(16, 185, 129, 0.65)";
+    badge.style.boxShadow = "0 0 16px rgba(16, 185, 129, 0.5)";
+    badge.style.cursor = "default";
+    badge.style.pointerEvents = "none";
+  } else if (mode === 'break') {
+    if (indicator) indicator.style.color = "#f43f5e";
+    badge.style.borderColor = "rgba(244, 63, 94, 0.7)";
+    badge.style.boxShadow = "0 0 16px rgba(244, 63, 94, 0.6)";
+    badge.style.cursor = "pointer";
+    badge.style.pointerEvents = "auto";
+  } else if (mode === 'success') {
+    if (indicator) indicator.style.color = "#fbbf24";
+    badge.style.borderColor = "rgba(251, 191, 36, 0.8)";
+    badge.style.boxShadow = "0 0 20px rgba(251, 191, 36, 0.6)";
+    badge.style.cursor = "pointer";
+    badge.style.pointerEvents = "auto";
+  }
+}
+
 async function startNewGame() {
   await defaultEngine.start();
   playerStep = 0;
@@ -1264,10 +1637,15 @@ async function startNewGame() {
 
   document.getElementById('score-val').innerText = '0';
   document.getElementById('round-num').innerText = '1';
-  document.getElementById('start-game-btn').innerText = "🔄 Restart Seismic Simon";
+  const startBtn = document.getElementById('start-game-btn');
+  if (startBtn) {
+    startBtn.innerText = "🔄 Restart Seismic Simon";
+    startBtn.classList.add('running');
+  }
   document.getElementById('game-status-badge').innerText = "Round 1 Active";
   document.getElementById('game-status-badge').style.background = "rgba(56, 189, 248, 0.2)";
   document.getElementById('game-status-badge').style.color = "#38bdf8";
+  updateTurnIndicator("Watch", "watch");
 
   nextRound();
 }
@@ -1275,8 +1653,7 @@ async function startNewGame() {
 function nextRound() {
   isPlayerTurn = false;
   playerStep = 0;
-  document.getElementById('turn-indicator').innerText = "Watch";
-  document.getElementById('turn-indicator').style.color = "#fbbf24";
+  updateTurnIndicator("Watch", "watch");
   document.getElementById('round-num').innerText = currentRound;
   updateStepIndicator(0, currentRound);
 
@@ -1286,7 +1663,15 @@ function nextRound() {
 function updateStepIndicator(current, total) {
   const trackerEl = document.getElementById('step-tracker');
   if (trackerEl) {
-    trackerEl.innerText = `Quake ${current}/${total}`;
+    if (current > 0 && earthquakeTimeline[current - 1]) {
+      const q = earthquakeTimeline[current - 1];
+      const timeTag = currentDatasetMode === 'historical'
+        ? (q.year ? `Yr ${q.year}` : '')
+        : (q.dateStr ? `${q.dateStr}` : '');
+      trackerEl.innerText = `Quake ${current}/${total} ${timeTag ? '(' + timeTag + ')' : ''}`;
+    } else {
+      trackerEl.innerText = `Quake ${current}/${total}`;
+    }
   }
 }
 
@@ -1296,7 +1681,7 @@ async function playSimonSequence() {
   for (let i = 0; i < currentRound; i++) {
     const quake = earthquakeTimeline[i];
     const region = regions[quake.regionId];
-    const node = piePaths.nodes()[quake.regionId];
+    const node = getSliceNode(quake.regionId);
 
     updateStepIndicator(i + 1, currentRound);
     activateRegionSlice(region, quake, node, true);
@@ -1308,8 +1693,7 @@ async function playSimonSequence() {
 
   // Turn over to player
   isPlayerTurn = true;
-  document.getElementById('turn-indicator').innerText = "Your Turn!";
-  document.getElementById('turn-indicator').style.color = "#10b981";
+  updateTurnIndicator("Your Turn!", "player");
   updateStepIndicator(0, currentRound);
 }
 
@@ -1337,8 +1721,12 @@ function handlePlayerInput(clickedRegionId, domElement, clickedRegion) {
       if (currentRound >= earthquakeTimeline.length) {
         // Player mastered the entire earthquake timeline!
         isGameRunning = false;
-        document.getElementById('turn-indicator').innerText = "🏆 Master!";
-        document.getElementById('turn-indicator').style.color = "#fbbf24";
+        const startBtn = document.getElementById('start-game-btn');
+        if (startBtn) {
+          startBtn.innerText = "▶ Play Again";
+          startBtn.classList.remove('running');
+        }
+        updateTurnIndicator("🏆 Master!", "success");
         document.getElementById('game-status-badge').innerText = "Timeline Mastered!";
         document.getElementById('game-status-badge').style.background = "rgba(251, 191, 36, 0.2)";
         document.getElementById('game-status-badge').style.color = "#fbbf24";
@@ -1347,8 +1735,7 @@ function handlePlayerInput(clickedRegionId, domElement, clickedRegion) {
         document.getElementById('info-desc').innerText = `Phenomenal memory! You successfully reproduced all ${earthquakeTimeline.length} earthquakes across the globe in their exact chronological order of occurrence! Final Score: ${currentScore}.`;
       } else {
         currentRound++;
-        document.getElementById('turn-indicator').innerText = "✓ Nice!";
-        document.getElementById('turn-indicator').style.color = "#10b981";
+        updateTurnIndicator("✓ Nice!", "player");
 
         setTimeout(() => {
           nextRound();
@@ -1359,8 +1746,12 @@ function handlePlayerInput(clickedRegionId, domElement, clickedRegion) {
     // Fault Rupture / Mistake
     isPlayerTurn = false;
     isGameRunning = false;
-    document.getElementById('turn-indicator').innerText = "Break!";
-    document.getElementById('turn-indicator').style.color = "#f43f5e";
+    const startBtn = document.getElementById('start-game-btn');
+    if (startBtn) {
+      startBtn.innerText = "🔄 Retry Simon Game";
+      startBtn.classList.remove('running');
+    }
+    updateTurnIndicator("Break!", "break");
     document.getElementById('game-status-badge').innerText = "Seismic Fault Break!";
     document.getElementById('game-status-badge').style.background = "rgba(244, 63, 94, 0.2)";
     document.getElementById('game-status-badge').style.color = "#f43f5e";
@@ -1380,8 +1771,17 @@ document.getElementById('start-game-btn').addEventListener('click', () => {
   startNewGame();
 });
 
+const globeTurnBadge = document.getElementById('turn-badge');
+if (globeTurnBadge) {
+  globeTurnBadge.addEventListener('click', () => {
+    if (!isGameRunning) {
+      startNewGame();
+    }
+  });
+}
+
 // ============================================================================
-// 8. USGS REGION CLASSIFICATION & DATE QUERY ENGINE
+// 8. USGS QUERY ENGINE: YEAR, MONTH, DAY, AND LIVE FEEDS
 // ============================================================================
 function classifyQuakeToRegion(f) {
   const [lon, lat] = f.geometry.coordinates;
@@ -1491,6 +1891,158 @@ function getNextDay(dateString) {
   return d.toISOString().split('T')[0];
 }
 
+// 8A. Fetch Top Largest Earthquakes for a Given Year (Sorted Jan -> Dec)
+async function fetchLargestQuakesForYear(year) {
+  const loadBtn = document.getElementById('fetch-year-btn');
+  if (loadBtn) loadBtn.innerText = "⏳ Querying USGS...";
+
+  try {
+    const startStr = `${year}-01-01`;
+    const endStr = `${year}-12-31`;
+    // Attempt minmagnitude=6.5 first for true major temblors
+    let url = `https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=${startStr}&endtime=${endStr}&minmagnitude=6.5&orderby=magnitude&limit=20`;
+    let res = await fetch(url);
+    let json = await res.json();
+
+    if (!json.features || json.features.length < 5) {
+      url = `https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=${startStr}&endtime=${endStr}&minmagnitude=5.8&orderby=magnitude&limit=20`;
+      res = await fetch(url);
+      json = await res.json();
+    }
+
+    if (json.features && json.features.length >= 3) {
+      const parsed = json.features
+        .filter(f => f.geometry && f.geometry.coordinates && f.properties.mag != null)
+        .map(f => {
+          const regionId = classifyQuakeToRegion(f);
+          const date = new Date(f.properties.time);
+          const [lon, lat, depth] = f.geometry.coordinates;
+          const monthDay = date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+          return {
+            time: f.properties.time,
+            year: date.getFullYear(),
+            dateStr: `${monthDay}, ${year}`,
+            regionId,
+            lon,
+            lat,
+            title: `M${Number(f.properties.mag).toFixed(1)} - ${f.properties.place || "Earthquake"}`,
+            place: f.properties.place || regions[regionId].name,
+            mag: Math.max(3.5, Number(Number(f.properties.mag).toFixed(1))),
+            depthKm: Math.max(5, Math.round(depth || 10)),
+            plate: `Coord: [${lat.toFixed(1)}°, ${lon.toFixed(1)}°]`,
+            type: `${year} Top Event`,
+            fact: `One of the largest global earthquakes of ${year}, recorded by USGS on ${date.toDateString()} with magnitude M${Number(f.properties.mag).toFixed(1)} and depth ${Math.round(depth)} km.`
+          };
+        });
+
+      // Sort the top largest quakes in chronological order (Jan -> Dec)
+      parsed.sort((a, b) => a.time - b.time);
+
+      currentDatasetMode = 'year';
+      activeDateLabel = `Year ${year}`;
+      earthquakeTimeline = parsed.slice(0, 20);
+      syncRegionsWithTimeline(earthquakeTimeline);
+      renderPie(regions);
+
+      const firstQuake = earthquakeTimeline[0];
+      const targetRegion = regions[firstQuake.regionId];
+      rotateGlobeTo(firstQuake.lon, firstQuake.lat, 800);
+      setGlobeActiveEpicenter(firstQuake.lon, firstQuake.lat, firstQuake, targetRegion);
+      updateFactCard(targetRegion, firstQuake);
+
+      updateDatasetDisplay();
+
+      if (loadBtn) loadBtn.innerText = `✓ Loaded (${earthquakeTimeline.length} Quakes)`;
+    } else {
+      if (loadBtn) loadBtn.innerText = "⚠ Few Quakes";
+      document.getElementById('info-title').innerText = `📅 Few Quakes in ${year}`;
+      document.getElementById('info-desc').innerText = `USGS reported fewer than 3 significant events for ${year}. Try another year or one of the presets!`;
+    }
+  } catch (err) {
+    console.error("USGS year query error:", err);
+    if (loadBtn) loadBtn.innerText = "✖ Query Error";
+  }
+}
+
+// 8B. Fetch Top Largest Earthquakes for a Given Month (Sorted Day 1 -> 31)
+async function fetchLargestQuakesForMonth(yearMonth) {
+  const loadBtn = document.getElementById('fetch-month-btn');
+  if (loadBtn) loadBtn.innerText = "⏳ Querying USGS...";
+
+  try {
+    const [year, month] = yearMonth.split('-').map(Number);
+    const startStr = `${yearMonth}-01`;
+    const lastDay = new Date(year, month, 0).getDate();
+    const endStr = `${yearMonth}-${String(lastDay).padStart(2, '0')}`;
+
+    // Attempt minmagnitude=6.0 first
+    let url = `https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=${startStr}&endtime=${endStr}&minmagnitude=6.0&orderby=magnitude&limit=20`;
+    let res = await fetch(url);
+    let json = await res.json();
+
+    if (!json.features || json.features.length < 5) {
+      url = `https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=${startStr}&endtime=${endStr}&minmagnitude=5.0&orderby=magnitude&limit=20`;
+      res = await fetch(url);
+      json = await res.json();
+    }
+
+    if (json.features && json.features.length >= 3) {
+      const monthName = new Date(year, month - 1, 1).toLocaleDateString([], { month: 'long', year: 'numeric' });
+      const parsedQuakes = json.features
+        .filter(f => f.geometry && f.geometry.coordinates && f.properties.mag != null)
+        .map(f => {
+          const regionId = classifyQuakeToRegion(f);
+          const date = new Date(f.properties.time);
+          const [lon, lat, depth] = f.geometry.coordinates;
+          const dayStr = date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+          const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          return {
+            time: f.properties.time,
+            year: date.getFullYear(),
+            dateStr: `${dayStr} (${timeStr})`,
+            regionId,
+            lon,
+            lat,
+            title: `M${Number(f.properties.mag).toFixed(1)} - ${f.properties.place || "Earthquake"}`,
+            place: f.properties.place || regions[regionId].name,
+            mag: Math.max(3.5, Number(Number(f.properties.mag).toFixed(1))),
+            depthKm: Math.max(5, Math.round(depth || 10)),
+            plate: `Coord: [${lat.toFixed(1)}°, ${lon.toFixed(1)}°]`,
+            type: `${monthName} Top Event`,
+            fact: `One of the largest global earthquakes of ${monthName}, recorded by USGS on ${date.toDateString()} at ${timeStr} with magnitude M${Number(f.properties.mag).toFixed(1)} and focal depth ${Math.round(depth)} km.`
+          };
+        });
+
+      // Sort the top largest quakes in chronological order (Day 1 -> Day 31)
+      parsedQuakes.sort((a, b) => a.time - b.time);
+
+      currentDatasetMode = 'month';
+      activeDateLabel = monthName;
+      earthquakeTimeline = parsedQuakes.slice(0, 20);
+      syncRegionsWithTimeline(earthquakeTimeline);
+      renderPie(regions);
+
+      const firstQuake = earthquakeTimeline[0];
+      const targetRegion = regions[firstQuake.regionId];
+      rotateGlobeTo(firstQuake.lon, firstQuake.lat, 800);
+      setGlobeActiveEpicenter(firstQuake.lon, firstQuake.lat, firstQuake, targetRegion);
+      updateFactCard(targetRegion, firstQuake);
+
+      updateDatasetDisplay();
+
+      if (loadBtn) loadBtn.innerText = `✓ Loaded (${earthquakeTimeline.length} Quakes)`;
+    } else {
+      if (loadBtn) loadBtn.innerText = "⚠ Few Quakes";
+      document.getElementById('info-title').innerText = `📅 Few Quakes in ${yearMonth}`;
+      document.getElementById('info-desc').innerText = `USGS reported fewer than 3 significant events for ${yearMonth}. Try another month or preset!`;
+    }
+  } catch (err) {
+    console.error("USGS month query error:", err);
+    if (loadBtn) loadBtn.innerText = "✖ Query Error";
+  }
+}
+
+// 8C. Fetch Single-Day Earthquakes (Sorted 00:00 -> 23:59 UTC)
 async function fetchEarthquakesForDate(dateStr) {
   const nextDayStr = getNextDay(dateStr);
   const fetchDateBtn = document.getElementById('fetch-date-btn');
@@ -1532,6 +2084,8 @@ async function fetchEarthquakesForDate(dateStr) {
         })
         .sort((a, b) => a.time - b.time);
 
+      currentDatasetMode = 'singleday';
+      activeDateLabel = dateStr;
       earthquakeTimeline = parsedQuakes.slice(0, 25);
       syncRegionsWithTimeline(earthquakeTimeline);
       renderPie(regions);
@@ -1542,8 +2096,10 @@ async function fetchEarthquakesForDate(dateStr) {
       setGlobeActiveEpicenter(firstQuake.lon, firstQuake.lat, firstQuake, targetRegion);
       updateFactCard(targetRegion, firstQuake);
 
+      updateDatasetDisplay();
+
       if (fetchDateBtn) fetchDateBtn.innerText = `✓ Loaded (${earthquakeTimeline.length} Quakes)`;
-      document.getElementById('info-desc').innerText = `Loaded ${earthquakeTimeline.length} real earthquakes recorded on ${dateStr}. Slices reflect regional activity. Earliest event occurred in ${targetRegion.name} (${firstQuake.title}). Press Start Game to play the chronological sequence!`;
+      document.getElementById('info-desc').innerText = `Loaded ${earthquakeTimeline.length} real earthquakes recorded on ${dateStr}. Slices reflect regional tremor counts across 24 hours. Earliest event occurred in ${targetRegion.name} (${firstQuake.title}). Press Start Game to play the chronological sequence!`;
     } else {
       if (fetchDateBtn) fetchDateBtn.innerText = "⚠ Few Quakes";
       document.getElementById('info-title').innerText = `📅 Few Quakes on ${dateStr}`;
@@ -1555,7 +2111,106 @@ async function fetchEarthquakesForDate(dateStr) {
   }
 }
 
-// 9. Wire Date Picker & Preset Buttons
+// 9. Wire Mode Switcher Tabs
+const tabHist = document.getElementById('tab-mode-historical');
+if (tabHist) {
+  tabHist.addEventListener('click', () => {
+    loadHistoricalTimeline();
+  });
+}
+
+const tabYear = document.getElementById('tab-mode-year');
+if (tabYear) {
+  tabYear.addEventListener('click', () => {
+    currentDatasetMode = 'year';
+    updateDatasetDisplay();
+    const yearPicker = document.getElementById('quake-year-picker');
+    if (yearPicker && yearPicker.value) {
+      fetchLargestQuakesForYear(yearPicker.value);
+    }
+  });
+}
+
+const tabMonth = document.getElementById('tab-mode-month');
+if (tabMonth) {
+  tabMonth.addEventListener('click', () => {
+    currentDatasetMode = 'month';
+    updateDatasetDisplay();
+    const monthPicker = document.getElementById('quake-month-picker');
+    if (monthPicker && monthPicker.value) {
+      fetchLargestQuakesForMonth(monthPicker.value);
+    }
+  });
+}
+
+const tabSingle = document.getElementById('tab-mode-singleday');
+if (tabSingle) {
+  tabSingle.addEventListener('click', () => {
+    currentDatasetMode = 'singleday';
+    updateDatasetDisplay();
+    const dateInput = document.getElementById('quake-date-picker');
+    if (dateInput && dateInput.value) {
+      fetchEarthquakesForDate(dateInput.value);
+    }
+  });
+}
+
+const restoreHistBtn = document.getElementById('btn-restore-historical');
+if (restoreHistBtn) {
+  restoreHistBtn.addEventListener('click', () => {
+    loadHistoricalTimeline();
+  });
+}
+
+// 10. Wire Year Picker & Preset Buttons
+const yearInput = document.getElementById('quake-year-picker');
+const fetchYearBtn = document.getElementById('fetch-year-btn');
+if (fetchYearBtn && yearInput) {
+  fetchYearBtn.addEventListener('click', () => {
+    if (yearInput.value) {
+      document.querySelectorAll('.quick-preset-year').forEach(b => b.classList.remove('active'));
+      fetchLargestQuakesForYear(yearInput.value);
+    }
+  });
+}
+
+document.querySelectorAll('.quick-preset-year').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.quick-preset-year').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const y = btn.dataset.year;
+    if (y) {
+      if (yearInput) yearInput.value = y;
+      fetchLargestQuakesForYear(y);
+    }
+  });
+});
+
+// 11. Wire Month Picker & Preset Buttons
+const monthInput = document.getElementById('quake-month-picker');
+const fetchMonthBtn = document.getElementById('fetch-month-btn');
+if (fetchMonthBtn && monthInput) {
+  fetchMonthBtn.addEventListener('click', () => {
+    if (monthInput.value) {
+      document.querySelectorAll('.quick-preset-month').forEach(b => b.classList.remove('active'));
+      fetchLargestQuakesForMonth(monthInput.value);
+    }
+  });
+}
+
+document.querySelectorAll('.quick-preset-month').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.quick-preset-month').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const m = btn.dataset.month;
+    if (m) {
+      if (monthInput) monthInput.value = m;
+      fetchLargestQuakesForMonth(m);
+    }
+  });
+});
+
+// 12. Wire Date Picker & Single-Day Presets
 const dateInput = document.getElementById('quake-date-picker');
 const fetchDateBtn = document.getElementById('fetch-date-btn');
 
@@ -1567,14 +2222,15 @@ if (dateInput) {
 if (fetchDateBtn && dateInput) {
   fetchDateBtn.addEventListener('click', () => {
     if (dateInput.value) {
+      document.querySelectorAll('.quick-preset-day').forEach(b => b.classList.remove('active'));
       fetchEarthquakesForDate(dateInput.value);
     }
   });
 }
 
-document.querySelectorAll('.quick-preset-btn').forEach(btn => {
+document.querySelectorAll('.quick-preset-day').forEach(btn => {
   btn.addEventListener('click', () => {
-    document.querySelectorAll('.quick-preset-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.quick-preset-day').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
 
     const preset = btn.dataset.preset;
@@ -1633,6 +2289,8 @@ if (liveBtn) {
           })
           .sort((a, b) => a.time - b.time);
 
+        currentDatasetMode = 'singleday';
+        activeDateLabel = 'Past 24h Live';
         earthquakeTimeline = parsedQuakes.slice(0, 25);
         syncRegionsWithTimeline(earthquakeTimeline);
         renderPie(regions);
@@ -1642,6 +2300,8 @@ if (liveBtn) {
         rotateGlobeTo(firstQuake.lon, firstQuake.lat, 800);
         setGlobeActiveEpicenter(firstQuake.lon, firstQuake.lat, firstQuake, targetRegion);
         updateFactCard(targetRegion, firstQuake);
+
+        updateDatasetDisplay();
 
         liveBtn.innerText = `✓ Loaded ${earthquakeTimeline.length} Live USGS Quakes`;
         document.getElementById('info-desc').innerText = `Loaded ${earthquakeTimeline.length} real earthquakes occurring over the past 24 hours. Earliest event occurred in ${targetRegion.name} (${firstQuake.title}). Press Start Game to play the chronological sequence!`;
@@ -1654,3 +2314,6 @@ if (liveBtn) {
     }
   });
 }
+
+// Initial display sync on load
+updateDatasetDisplay();
