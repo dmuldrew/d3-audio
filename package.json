@@ -6,6 +6,12 @@
   "module": "src/index.js",
   "exports": {
     ".": "./src/index.js",
+    "./src": "./src/index.js",
+    "./src/audio": "./src/audio/index.js",
+    "./src/movements": "./src/movements/index.js",
+    "./src/musical": "./src/musical/index.js",
+    "./src/scales": "./src/scales/index.js",
+    "./src/timeline": "./src/timeline/index.js",
     "./src/*": "./src/*",
     "./dist/*": "./dist/*",
     "./package.json": "./package.json"
