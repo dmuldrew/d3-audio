@@ -3,7 +3,8 @@ import * as d3Audio from '../src/index.js';
 
 /**
  * For each scale: a non-default configuration, a change to apply to the copy,
- * and inputs whose output must match between original and copy.
+ * and inputs whose output must match between original and copy. `getters` lists
+ * settings that don't show up in the output and must be compared directly.
  */
 const CASES = {
   scalePitch: {
@@ -69,7 +70,8 @@ const CASES = {
   scaleRhythm: {
     configure: s => s.domain([0, 10]).steps(8).range([2, 6]).subdivision("8n").clamp(false),
     mutate: s => s.steps(12),
-    inputs: [0, 5, 20, NaN]
+    inputs: [0, 5, 20, NaN],
+    getters: ["subdivision"]
   }
 };
 
@@ -84,13 +86,16 @@ export function testCopy() {
   assertEqual(untested, [], "Every exported scale has a copy() test case");
 
   for (const name of scaleNames) {
-    const { configure, mutate, inputs } = CASES[name] || CASES[ALIASES[name]];
+    const { configure, mutate, inputs, getters = [] } = CASES[name] || CASES[ALIASES[name]];
     const original = configure(d3Audio[name]());
     assertEqual(typeof original.copy, "function", `${name} has copy()`);
 
     const copy = original.copy();
     assert(typeof copy === "function" && copy !== original, `${name}.copy() returns a new scale`);
     assertEqual(outputs(copy, inputs), outputs(original, inputs), `${name}.copy() reproduces the original's configuration`);
+    for (const getter of getters) {
+      assertEqual(copy[getter](), original[getter](), `${name}.copy() preserves ${getter}()`);
+    }
 
     const before = outputs(original, inputs);
     mutate(copy);
