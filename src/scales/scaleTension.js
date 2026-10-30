@@ -16,7 +16,6 @@ import { isMissing } from './unknown.js';
 export function scaleTension() {
   let domain = [0, 100];
   let rootNote = "C3";
-  let mode = "pentatonic";
   let detuneRange = [0, 60]; // cents of microtonal tension
   let filterRange = [400, 8000]; // Hz
   let tempoRange = [1.0, 1.8]; // speed multiplier

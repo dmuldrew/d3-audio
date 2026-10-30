@@ -2,7 +2,6 @@ import { describe, test } from 'node:test';
 import { assert, assertEqual, assertClose } from './helpers.js';
 import {
   SoundEngine,
-  defaultEngine,
   SynthVoice,
   createSynth,
   SamplePlayer,
@@ -41,7 +40,7 @@ function createMockTone() {
     constructor(val = 0) {
       this.value = val;
     }
-    rampTo(newVal, rampTime) {
+    rampTo(newVal) {
       this.value = newVal;
     }
   }

@@ -13,7 +13,7 @@ export function pulse(t, {
   intensity = 1.0,
   maxScale = 1.35
 } = {}) {
-  let scaleFactor = 1.0;
+  let scaleFactor;
   const boost = (maxScale - 1.0) * intensity;
 
   if (t < 0.2) {

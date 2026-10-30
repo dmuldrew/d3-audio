@@ -1,4 +1,4 @@
-import { parseNote, midiToNote, transpose } from '../musical/notes.js';
+import { parseNote, midiToNote } from '../musical/notes.js';
 
 const CHORD_FORMULAS = {
   major: [0, 4, 7],

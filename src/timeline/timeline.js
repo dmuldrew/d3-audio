@@ -202,7 +202,7 @@ export class Timeline {
       if (track.isMuted) continue;
       if (hasSolo && !track.isSolo) continue;
 
-      const events = track.buildEvents(this._bpm);
+      const events = track.buildEvents();
 
       // Create Tone.Part for this track's events
       const part = new this.Tone.Part((time, event) => {

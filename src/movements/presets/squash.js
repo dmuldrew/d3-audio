@@ -13,8 +13,8 @@ export function squash(t, {
   intensity = 1.0,
   direction = "vertical"
 } = {}) {
-  let scaleMain = 1.0;
-  let scaleCross = 1.0;
+  let scaleMain;
+  let scaleCross;
 
   if (t < 0.15) {
     // Initial squash on impact: wide & flat
