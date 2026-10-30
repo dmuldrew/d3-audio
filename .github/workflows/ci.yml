@@ -34,6 +34,14 @@ jobs:
       - name: Build dist bundles
         run: npm run build
 
+      - name: Check committed dist bundles are up to date
+        run: |
+          if [ -n "$(git status --porcelain -- dist/)" ]; then
+            echo "::error::dist/ does not match a fresh build. Run 'npm run build' and commit the result."
+            git status --short -- dist/
+            exit 1
+          fi
+
       - name: Run unit test suite
         run: npm test
 

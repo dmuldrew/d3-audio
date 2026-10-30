@@ -1246,7 +1246,7 @@ d3-audio/
 ├── package.json                   # Module metadata & scripts
 ├── Dockerfile                     # Docker container configuration
 ├── docker-compose.yml             # Docker compose service definition
-├── dist/                          # Production builds
+├── dist/                          # Production builds (committed: run `npm run build` after changing src/; CI checks they match)
 │   ├── d3-audio.js                # Standalone UMD / D3 bundle
 │   └── d3-audio.min.js            # Minified distribution
 ├── src/
