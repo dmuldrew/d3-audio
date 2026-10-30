@@ -170,9 +170,9 @@ export function scalePitch() {
   };
 
   scale.gain = function(x) {
+    if (!isCategorical && isMissing(x)) return unknownValue;
     if (!isEqualLoudness) return 1.0;
     const freq = scale.frequency(x);
-    if (!isCategorical && isMissing(x)) return unknownValue;
     return equalLoudnessCompensation(freq);
   };
 

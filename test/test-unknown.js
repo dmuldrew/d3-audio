@@ -59,6 +59,9 @@ export function testUnknown() {
   assertEqual(pitch.midi(undefined), null, "scalePitch.midi(undefined) returns unknown()");
   assertEqual(pitch.gain(NaN), null, "scalePitch.gain(NaN) returns unknown()");
 
+  assertEqual(scalePitch().unknown(0).gain(NaN), 0, "scalePitch.gain(NaN) returns unknown() with equalLoudness off (the default)");
+  assertEqual(scalePitch().gain(50), 1.0, "scalePitch.gain() still returns 1.0 for valid input with equalLoudness off");
+
   const silent = scaleGain().domain([0, 100]).unknown(0);
   assertEqual(silent.db(NaN), 0, "scaleGain.db(NaN) returns unknown() rather than a dB value");
   assertEqual(silent(null), 0, "scaleGain.unknown(0) makes missing data silent");

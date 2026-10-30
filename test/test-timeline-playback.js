@@ -169,8 +169,13 @@ export async function testTimelinePlayback() {
     tl.data([{ pitch: "C4", gain: 0 }]);
     const [event] = tl.defaultTrack.buildEvents();
     assertEqual(event.gain, 0, "A datum with gain 0 keeps gain 0 (not replaced by the 0.8 default)");
+    const visuals = [];
+    tl.defaultTrack.triggerVisuals = e => visuals.push(e);
     tl.defaultTrack.triggerEvent(event, 0, null);
-    assertEqual(instrument.notes[0].velocity, 0, "Zero gain reaches the instrument as velocity 0");
+    assertEqual(instrument.notes.length, 0, "Zero-gain event skips the instrument (real instruments floor velocity at 0.01)");
+    assertEqual(visuals.length, 1, "Zero-gain event still runs its visuals");
+    tl.defaultTrack.triggerEvent({ ...event, gain: 0.3 }, 0, null);
+    assertEqual(instrument.notes[0].velocity, 0.3, "Non-zero gain reaches the instrument as velocity");
 
     const sampler = createMockInstrument();
     const drums = tl.track("drums", { type: "sample", instrument: sampler });
@@ -178,7 +183,8 @@ export async function testTimelinePlayback() {
     const [snare, unnamed] = drums.buildEvents();
     drums.triggerEvent(snare, 2, null);
     drums.triggerEvent(unnamed, 3, null);
-    assertEqual(sampler.samples.map(s => s.name), ["snare", "kick"], "Sample tracks trigger named samples and fall back to 'kick'");
+    drums.triggerEvent({ ...snare, gain: 0 }, 3.5, null);
+    assertEqual(sampler.samples.map(s => s.name), ["snare", "kick"], "Sample tracks trigger named samples, fall back to 'kick', and skip zero-gain hits");
     assertEqual(sampler.samples[0].params.pitch, "D4", "Sample trigger forwards pitch in params");
 
     drums.mute(true);

@@ -504,6 +504,8 @@ gain(null); // 0
 gain(NaN);  // 0
 ```
 
+`unknown()` applies only to numeric domains. With a categorical domain (e.g. `.domain(["low", "high"])`), strings are valid keys, and a key that isn't in the domain keeps the scale's own fallback (`null` for `scalePitch`, the first range value for `scaleGain`, and so on) rather than `unknown()`.
+
 #### Supported Musical Scales & Modes
 
 | Scale Name | Semitone Intervals | Characteristics |

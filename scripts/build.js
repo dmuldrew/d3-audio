@@ -16,6 +16,7 @@ const sourceFiles = [
   'src/musical/notes.js',
   'src/musical/scales.js',
   'src/musical/equalLoudness.js',
+  'src/scales/unknown.js',
   'src/scales/scalePitch.js',
   'src/scales/scaleGain.js',
   'src/scales/scaleDuration.js',
@@ -49,6 +50,22 @@ const sourceFiles = [
   'src/timeline/track.js',
   'src/timeline/timeline.js'
 ];
+
+// Fail fast if a source module is missing from the list: the bundle would
+// otherwise build fine and throw a ReferenceError at runtime.
+function listSourceModules(dir) {
+  return fs.readdirSync(path.join(rootDir, dir), { withFileTypes: true }).flatMap(entry => {
+    const rel = `${dir}/${entry.name}`;
+    if (entry.isDirectory()) return listSourceModules(rel);
+    return entry.name.endsWith('.js') && entry.name !== 'index.js' ? [rel] : [];
+  });
+}
+
+const unlisted = listSourceModules('src').filter(f => !sourceFiles.includes(f));
+if (unlisted.length) {
+  console.error(`Source modules missing from sourceFiles in scripts/build.js: ${unlisted.join(', ')}`);
+  process.exit(1);
+}
 
 console.log('Building d3-audio bundle...');
 
