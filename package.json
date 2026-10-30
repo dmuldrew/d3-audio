@@ -31,9 +31,9 @@
   },
   "author": "Daniel Muldrew",
   "license": "MIT",
-  "dependencies": {
-    "d3": "^7.9.0",
-    "tone": "^15.0.4"
+  "peerDependencies": {
+    "d3": "^7.0.0",
+    "tone": "^14.8.0 || ^15.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
