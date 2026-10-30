@@ -1,0 +1,2 @@
+# Built bundles: collapse their diffs in pull requests
+dist/** linguist-generated=true
