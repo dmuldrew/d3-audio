@@ -422,6 +422,23 @@ You can load `d3-audio` directly from the `dist/` bundle alongside D3 and Tone.j
 </html>
 ```
 
+### 2. Use with a bundler
+
+`d3` and `tone` are **peer dependencies**: `d3-audio` never bundles or imports them, so your app supplies the copies it already uses (npm 7+ installs them automatically if they are missing). Supported ranges are `d3@^7` and `tone@^14.8 || ^15`.
+
+```bash
+npm install github:dmuldrew/d3-audio d3 tone
+```
+
+Bundlers such as Vite or webpack resolve the package's `module` entry (`src/index.js`). Hand your Tone.js instance to the shared engine before playing anything:
+
+```javascript
+import * as Tone from "tone";
+import { defaultEngine, scalePitch, timeline } from "d3-audio";
+
+defaultEngine.setTone(Tone);
+```
+
 ---
 
 ## 🎮 Interactive Demo Applications & GitHub Pages Hosting
