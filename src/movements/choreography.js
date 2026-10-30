@@ -18,36 +18,47 @@ export const PRESETS = {
   squash
 };
 
-// Inline styles an element had before its first running movement, keyed by
-// element. Overlapping movements share one entry so the styles are restored
-// only when the last of them finishes, never to a mid-animation frame.
+// For each element, the inline value every style property had before the
+// movements currently writing it began, plus how many of them are writing it.
+// A property is restored when its last writer ends, so overlapping movements
+// never restore another movement's mid-animation frame, and a short movement's
+// properties come back on time even while a longer one keeps running.
 const restingStyles = new WeakMap();
 
-function beginMovement(el) {
-  let entry = restingStyles.get(el);
-  if (!entry) {
-    entry = { active: 0, written: new Set(), styles: {} };
-    restingStyles.set(el, entry);
-  }
-  entry.active++;
-  return entry;
-}
-
-function writeStyle(el, entry, prop, value) {
-  if (!entry.written.has(prop)) {
-    entry.written.add(prop);
-    entry.styles[prop] = el.style[prop] || '';
+// Writes an inline style on behalf of one movement, which tracks the
+// properties it has claimed in `claims`.
+function writeStyle(el, claims, prop, value) {
+  if (!claims.has(prop)) {
+    let props = restingStyles.get(el);
+    if (!props) {
+      props = new Map();
+      restingStyles.set(el, props);
+    }
+    let resting = props.get(prop);
+    if (!resting) {
+      resting = { writers: 0, value: el.style[prop] || '' };
+      props.set(prop, resting);
+    }
+    resting.writers++;
+    claims.add(prop);
   }
   el.style[prop] = value;
 }
 
-function endMovement(el, entry) {
-  entry.active--;
-  if (entry.active > 0) return;
-  restingStyles.delete(el);
-  for (const prop of entry.written) {
-    el.style[prop] = entry.styles[prop];
+// Releases a movement's claims, restoring each property it was the last writer of.
+function releaseStyles(el, claims) {
+  const props = restingStyles.get(el);
+  if (!props) return;
+  for (const prop of claims) {
+    const resting = props.get(prop);
+    resting.writers--;
+    if (resting.writers === 0) {
+      el.style[prop] = resting.value;
+      props.delete(prop);
+    }
   }
+  claims.clear();
+  if (props.size === 0) restingStyles.delete(el);
 }
 
 /**
@@ -102,14 +113,14 @@ export function choreography() {
       ...extraOpts
     };
 
+    const claims = new Set();
+
     // Ensure transform origin is set for SVG/DOM elements
     const isSvg = typeof SVGElement !== 'undefined' && el instanceof SVGElement;
     if (isSvg) {
-      el.style.transformBox = 'fill-box';
-      el.style.transformOrigin = extraOpts.origin || 'center';
-    } else {
-      el.style.transformOrigin = extraOpts.origin || 'center';
+      writeStyle(el, claims, 'transformBox', 'fill-box');
     }
+    writeStyle(el, claims, 'transformOrigin', extraOpts.origin || 'center');
 
     const rAF = typeof requestAnimationFrame !== 'undefined'
       ? requestAnimationFrame
@@ -121,12 +132,11 @@ export function choreography() {
     let startTime = null;
     let animId = null;
     let finished = false;
-    const resting = beginMovement(el);
 
     function finish() {
       if (finished) return;
       finished = true;
-      endMovement(el, resting);
+      releaseStyles(el, claims);
     }
 
     if (onStartCallback) {
@@ -134,6 +144,7 @@ export function choreography() {
     }
 
     function step(timestamp) {
+      if (finished) return;
       if (!startTime) startTime = timestamp;
       const elapsed = timestamp - startTime;
       const t = Math.min(1.0, elapsed / durationMs);
@@ -143,19 +154,21 @@ export function choreography() {
       // Apply transform & styling
       if (frameResult.transform !== undefined) {
         const transform = frameResult.transform === 'none' ? '' : frameResult.transform;
-        writeStyle(el, resting, 'transform', transform);
+        writeStyle(el, claims, 'transform', transform);
       }
 
       if (frameResult.filter !== undefined) {
-        writeStyle(el, resting, 'filter', frameResult.filter);
+        writeStyle(el, claims, 'filter', frameResult.filter);
       }
 
       if (frameResult.opacity !== undefined && movementType === 'ripple') {
-        writeStyle(el, resting, 'opacity', frameResult.opacity);
+        writeStyle(el, claims, 'opacity', frameResult.opacity);
       }
 
       if (onProgressCallback) {
         onProgressCallback(t, frameResult, el, datum);
+        // The callback may have cancelled the movement
+        if (finished) return;
       }
 
       if (t < 1.0) {

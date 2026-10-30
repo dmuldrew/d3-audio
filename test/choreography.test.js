@@ -185,4 +185,54 @@ describe("Choreography presets & D3 transitions", () => {
     await secondEnded;
     assertEqual(node.style.transform, "translate(4px, 4px)", "Styles return to the pre-movement transform after the last movement ends");
   });
+
+  test("Each style comes back when the last movement writing it ends", async () => {
+    const node = createMockNode();
+    node.style.filter = "blur(1px)";
+    node.style.transform = "translate(4px, 4px)";
+
+    const wiggle = choreography().movement("wiggle").duration(0.3);
+    const glow = choreography().movement("glow").duration(0.05);
+    const wiggleEnded = new Promise(resolve => wiggle.onEnd(resolve));
+    const glowEnded = new Promise(resolve => glow.onEnd(resolve));
+
+    wiggle.trigger(node);
+    glow.trigger(node);
+    await glowEnded;
+    assertEqual(node.style.filter, "blur(1px)", "A short glow restores the filter on time while a longer wiggle is still running");
+    assert(node.style.transform !== "translate(4px, 4px)", "The longer wiggle is still animating the transform");
+
+    await wiggleEnded;
+    assertEqual(node.style.transform, "translate(4px, 4px)", "The transform comes back when the wiggle ends");
+  });
+
+  test("Movements restore the transform origin they set", async () => {
+    const node = createMockNode();
+    node.style.transformOrigin = "left top";
+    const choreo = choreography().movement("pulse").duration(0.05);
+    const ended = new Promise(resolve => choreo.onEnd(resolve));
+    choreo.trigger(node);
+    assertEqual(node.style.transformOrigin, "center", "Movement centres the transform origin while running");
+    await ended;
+    assertEqual(node.style.transformOrigin, "left top", "Movement restores the element's transform origin");
+  });
+
+  test("cancel() from inside onProgress stops the movement for good", async () => {
+    const node = createMockNode();
+    node.style.transform = "rotate(5deg)";
+    let handle;
+    let frames = 0;
+    const choreo = choreography()
+      .movement("wiggle")
+      .duration(0.2)
+      .onProgress(() => {
+        frames++;
+        handle.cancel();
+      });
+
+    handle = choreo.trigger(node);
+    await new Promise(resolve => setTimeout(resolve, 120));
+    assertEqual(frames, 1, "No frames run after cancel() is called from onProgress");
+    assertEqual(node.style.transform, "rotate(5deg)", "The transform stays restored after an in-callback cancel()");
+  });
 });
