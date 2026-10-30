@@ -1,6 +1,7 @@
 import { parseNote, midiToNote, midiToFrequency, frequencyToMidi } from '../musical/notes.js';
 import { generateScaleNotes, quantizeToScale, SCALE_INTERVALS } from '../musical/scales.js';
 import { equalLoudnessCompensation } from '../musical/equalLoudness.js';
+import { isMissing } from './unknown.js';
 
 /**
  * Creates a D3-like pitch scale that maps a continuous or discrete domain to musical pitches.
@@ -25,6 +26,7 @@ export function scalePitch() {
   let isClamped = true;
   let isCategorical = false;
   let isEqualLoudness = false;
+  let unknownValue = undefined;
 
   // Cached scale degrees
   let cachedScaleNotes = null;
@@ -78,6 +80,7 @@ export function scalePitch() {
       return interpolate(t).note;
     }
 
+    if (isMissing(x)) return unknownValue;
     const d0 = domain[0];
     const d1 = domain[domain.length - 1];
     let t = d1 === d0 ? 0.5 : (x - d0) / (d1 - d0);
@@ -92,6 +95,7 @@ export function scalePitch() {
       return interpolate(t).frequency;
     }
 
+    if (isMissing(x)) return unknownValue;
     const d0 = domain[0];
     const d1 = domain[domain.length - 1];
     let t = d1 === d0 ? 0.5 : (x - d0) / (d1 - d0);
@@ -106,6 +110,7 @@ export function scalePitch() {
       return interpolate(t).midi;
     }
 
+    if (isMissing(x)) return unknownValue;
     const d0 = domain[0];
     const d1 = domain[domain.length - 1];
     let t = d1 === d0 ? 0.5 : (x - d0) / (d1 - d0);
@@ -158,7 +163,14 @@ export function scalePitch() {
     return scale;
   };
 
+  scale.unknown = function(_) {
+    if (!arguments.length) return unknownValue;
+    unknownValue = _;
+    return scale;
+  };
+
   scale.gain = function(x) {
+    if (!isCategorical && isMissing(x)) return unknownValue;
     if (!isEqualLoudness) return 1.0;
     const freq = scale.frequency(x);
     return equalLoudnessCompensation(freq);
@@ -195,7 +207,8 @@ export function scalePitch() {
       .root(rootNote)
       .quantize(isQuantized)
       .clamp(isClamped)
-      .equalLoudness(isEqualLoudness);
+      .equalLoudness(isEqualLoudness)
+      .unknown(unknownValue);
   };
 
   updateCache();

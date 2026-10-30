@@ -1,4 +1,5 @@
 import { equalLoudnessCompensation } from '../musical/equalLoudness.js';
+import { isMissing } from './unknown.js';
 
 /**
  * Creates a D3-like gain/volume scale that maps data to audio amplitude [0, 1] or decibels [-60, 0].
@@ -11,6 +12,7 @@ export function scaleGain() {
   let isClamped = true;
   let isCategorical = false;
   let isEqualLoudness = false;
+  let unknownValue = undefined;
 
   function curveTransform(t) {
     if (isClamped) {
@@ -38,6 +40,7 @@ export function scaleGain() {
       if (idx === -1) return range[0];
       t = domain.length > 1 ? idx / (domain.length - 1) : 0.5;
     } else {
+      if (isMissing(x)) return unknownValue;
       const d0 = domain[0];
       const d1 = domain[domain.length - 1];
       t = d1 === d0 ? 0.5 : (x - d0) / (d1 - d0);
@@ -57,6 +60,7 @@ export function scaleGain() {
   }
 
   scale.db = function(x, noteOrFreq) {
+    if (!isCategorical && isMissing(x)) return unknownValue;
     const gain = scale(x, noteOrFreq);
     if (gain <= 0.0001) return -60;
     return +(20 * Math.log10(gain)).toFixed(2);
@@ -99,6 +103,12 @@ export function scaleGain() {
     return scale;
   };
 
+  scale.unknown = function(_) {
+    if (!arguments.length) return unknownValue;
+    unknownValue = _;
+    return scale;
+  };
+
   scale.compensate = function(baseGain, noteOrFreq) {
     const mult = equalLoudnessCompensation(noteOrFreq);
     return +(baseGain * mult).toFixed(4);
@@ -111,7 +121,8 @@ export function scaleGain() {
       .curve(curveType)
       .exponent(exponentValue)
       .clamp(isClamped)
-      .equalLoudness(isEqualLoudness);
+      .equalLoudness(isEqualLoudness)
+      .unknown(unknownValue);
   };
 
   return scale;

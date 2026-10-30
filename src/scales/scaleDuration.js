@@ -1,3 +1,5 @@
+import { isMissing } from './unknown.js';
+
 /**
  * Musical rhythmic subdivisions and duration conversions.
  */
@@ -27,6 +29,7 @@ export function scaleDuration() {
   let isClamped = true;
   let bpm = 120;
   let isCategorical = false;
+  let unknownValue = undefined;
 
   function notationToBeats(not) {
     if (typeof not === 'number') return not;
@@ -64,6 +67,7 @@ export function scaleDuration() {
       if (idx === -1) return rangeNotation[0];
       t = domain.length > 1 ? idx / (domain.length - 1) : 0.5;
     } else {
+      if (isMissing(x)) return unknownValue;
       const d0 = domain[0];
       const d1 = domain[domain.length - 1];
       t = d1 === d0 ? 0.5 : (x - d0) / (d1 - d0);
@@ -87,6 +91,7 @@ export function scaleDuration() {
   }
 
   scale.seconds = function(x) {
+    if (!isCategorical && isMissing(x)) return unknownValue;
     const val = scale(x);
     if (typeof val === 'number') return val;
     const beats = notationToBeats(val);
@@ -118,6 +123,12 @@ export function scaleDuration() {
     return scale;
   };
 
+  scale.unknown = function(_) {
+    if (!arguments.length) return unknownValue;
+    unknownValue = _;
+    return scale;
+  };
+
   scale.clamp = function(_) {
     if (!arguments.length) return isClamped;
     isClamped = !!_;
@@ -130,7 +141,8 @@ export function scaleDuration() {
       .range(rangeNotation.slice())
       .quantize(isQuantized)
       .bpm(bpm)
-      .clamp(isClamped);
+      .clamp(isClamped)
+      .unknown(unknownValue);
   };
 
   return scale;

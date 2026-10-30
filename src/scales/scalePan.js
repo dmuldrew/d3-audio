@@ -1,3 +1,5 @@
+import { isMissing } from './unknown.js';
+
 /**
  * Creates a D3-like spatial / stereo panning scale that maps data to stereo pan values [-1.0 (L), +1.0 (R)].
  */
@@ -6,6 +8,7 @@ export function scalePan() {
   let range = [-1, 1]; // -1 = Left, 0 = Center, +1 = Right
   let isClamped = true;
   let isCategorical = false;
+  let unknownValue = undefined;
 
   function scale(x) {
     let t;
@@ -14,6 +17,7 @@ export function scalePan() {
       if (idx === -1) return 0;
       t = domain.length > 1 ? idx / (domain.length - 1) : 0.5;
     } else {
+      if (isMissing(x)) return unknownValue;
       const d0 = domain[0];
       const d1 = domain[domain.length - 1];
       t = d1 === d0 ? 0.5 : (x - d0) / (d1 - d0);
@@ -41,6 +45,12 @@ export function scalePan() {
     return scale;
   };
 
+  scale.unknown = function(_) {
+    if (!arguments.length) return unknownValue;
+    unknownValue = _;
+    return scale;
+  };
+
   scale.clamp = function(_) {
     if (!arguments.length) return isClamped;
     isClamped = !!_;
@@ -51,7 +61,8 @@ export function scalePan() {
     return scalePan()
       .domain(domain.slice())
       .range(range.slice())
-      .clamp(isClamped);
+      .clamp(isClamped)
+      .unknown(unknownValue);
   };
 
   return scale;

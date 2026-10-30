@@ -19,7 +19,7 @@ export class Track {
     // Accessors
     this.timeAccessor = (d, i) => i * 0.25; // default 16th or quarter notes
     this.pitchAccessor = d => d.pitch || d.note || "C4";
-    this.gainAccessor = d => d.gain || d.velocity || d.volume || 0.8;
+    this.gainAccessor = d => d.gain ?? d.velocity ?? d.volume ?? 0.8;
     this.durationAccessor = d => d.duration || "8n";
     this.panAccessor = d => d.pan !== undefined ? d.pan : 0;
     this.filterAccessor = d => d.filter !== undefined ? d.filter : undefined;
@@ -166,13 +166,16 @@ export class Track {
     const velocity = event.gain !== undefined ? event.gain : 0.8;
     const params = { pan: event.pan, filter: event.filter };
 
-    if (event.sample || this.instrumentType === 'sample') {
-      const sampleName = event.sample || 'kick';
-      if (this.instrument && this.instrument.trigger) {
-        this.instrument.trigger(sampleName, duration, scheduledTime, velocity, { ...params, pitch: event.pitch });
+    // Instruments floor velocity at 0.01, so zero-gain events skip the trigger to stay silent
+    if (velocity > 0) {
+      if (event.sample || this.instrumentType === 'sample') {
+        const sampleName = event.sample || 'kick';
+        if (this.instrument && this.instrument.trigger) {
+          this.instrument.trigger(sampleName, duration, scheduledTime, velocity, { ...params, pitch: event.pitch });
+        }
+      } else if (this.instrument && this.instrument.triggerAttackRelease) {
+        this.instrument.triggerAttackRelease(event.pitch, duration, scheduledTime, velocity, params);
       }
-    } else if (this.instrument && this.instrument.triggerAttackRelease) {
-      this.instrument.triggerAttackRelease(event.pitch, duration, scheduledTime, velocity, params);
     }
 
     // 2. High-precision visual synchronization with Tone.Draw
