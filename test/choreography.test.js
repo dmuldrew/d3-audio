@@ -1,8 +1,7 @@
 import { describe, test } from 'node:test';
-import { assert, assertEqual, assertClose } from './helpers.js';
+import { assert, assertEqual } from './helpers.js';
 import {
   choreography,
-  PRESETS,
   audioRamp,
   audioTransition
 } from '../src/index.js';
@@ -17,7 +16,7 @@ function createMockNode() {
 }
 
 describe("Choreography presets & D3 transitions", () => {
-  test("choreography Configurator & Preset Selection", () => {
+  test("choreography Configurator & Preset Selection", async () => {
     const choreo = choreography();
     assert(typeof choreo === 'function', "choreography() returns configurable animator function");
 
@@ -38,7 +37,7 @@ describe("Choreography presets & D3 transitions", () => {
 
     // Custom movement callback function
     let customCalled = false;
-    const customMovement = (t, options) => {
+    const customMovement = (t) => {
       customCalled = true;
       return {
         transform: `scale(${1 + t * 0.2})`,
@@ -46,7 +45,8 @@ describe("Choreography presets & D3 transitions", () => {
       };
     };
 
-    choreo.movement(customMovement);
+    choreo.movement(customMovement).duration(0.05);
+    const ended = new Promise(resolve => choreo.onEnd(resolve));
 
     const mockNode = createMockNode();
 
@@ -57,6 +57,9 @@ describe("Choreography presets & D3 transitions", () => {
     } catch (err) {
       assert(false, `choreography execution error: ${err.message}`);
     }
+
+    await ended;
+    assert(customCalled, "choreography drives a custom movement function frame by frame");
 
     // Verify all 8 built-in movement presets can be resolved
     const presetNames = ["wiggle", "flip", "pulse", "bounce", "shake", "ripple", "glow", "squash"];

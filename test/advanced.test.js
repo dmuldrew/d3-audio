@@ -117,7 +117,7 @@ describe("Advanced scales, theory & a11y", () => {
   });
 
   test("Audio Ramp / Transition Bridge", () => {
-    const mockParam = { value: 200, rampTo: (val, dur) => { mockParam.value = val; } };
+    const mockParam = { value: 200, rampTo: (val) => { mockParam.value = val; } };
     audioRamp(mockParam, 880, { duration: 0.5 });
     assertEqual(mockParam.value, 880, "audioRamp successfully ramped mock param to 880");
   });

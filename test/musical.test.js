@@ -3,7 +3,6 @@ import { assert, assertEqual, assertClose } from './helpers.js';
 import {
   parseNote,
   midiToNote,
-  midiToFrequency,
   frequencyToMidi,
   frequencyToNote,
   transpose,

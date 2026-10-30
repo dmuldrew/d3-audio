@@ -205,7 +205,7 @@ export function choreography() {
     }
   }
 
-  choreo.trigger = function(element, options = {}) {
+  choreo.trigger = function(element) {
     return animateElement(element, element.__data__ || null, 0, [element]);
   };
 
