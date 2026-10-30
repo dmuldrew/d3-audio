@@ -49,6 +49,14 @@ export function scaleSpatial() {
     return arguments.length ? ((clamp = Boolean(c)), scaler) : clamp;
   };
 
+  scaler.copy = function() {
+    return scaleSpatial()
+      .domain(domain)
+      .range(wetRange)
+      .decay(decayRange)
+      .clamp(clamp);
+  };
+
   scaler.createNode = function(Tone, val) {
     if (!Tone || !Tone.Freeverb) return null;
     const res = scaler(val);

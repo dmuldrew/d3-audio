@@ -100,6 +100,14 @@ export function scaleChord() {
 
   scaler.formulas = () => Object.keys(CHORD_FORMULAS);
 
+  scaler.copy = function() {
+    return scaleChord()
+      .root(rootNote)
+      .quality(defaultQuality)
+      .voicing(voicing)
+      .inversion(inversion);
+  };
+
   return scaler;
 }
 

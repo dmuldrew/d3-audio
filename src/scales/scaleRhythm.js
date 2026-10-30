@@ -129,5 +129,14 @@ export function scaleRhythm() {
     return arguments.length ? ((clamp = Boolean(c)), scaler) : clamp;
   };
 
+  scaler.copy = function() {
+    return scaleRhythm()
+      .domain(domain)
+      .steps(totalSteps)
+      .range(pulseRange)
+      .subdivision(subdivision)
+      .clamp(clamp);
+  };
+
   return scaler;
 }

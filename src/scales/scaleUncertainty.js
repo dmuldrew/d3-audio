@@ -55,6 +55,13 @@ export function scaleUncertainty() {
     return arguments.length ? ((clamp = Boolean(c)), scaler) : clamp;
   };
 
+  scaler.copy = function() {
+    return scaleUncertainty()
+      .domain(domain)
+      .range(bitRange)
+      .clamp(clamp);
+  };
+
   /**
    * Helper to create or configure a Tone.BitCrusher node with current scaled values.
    */

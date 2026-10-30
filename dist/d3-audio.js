@@ -1412,6 +1412,13 @@ function scaleUncertainty() {
     return arguments.length ? ((clamp = Boolean(c)), scaler) : clamp;
   };
 
+  scaler.copy = function() {
+    return scaleUncertainty()
+      .domain(domain)
+      .range(bitRange)
+      .clamp(clamp);
+  };
+
   /**
    * Helper to create or configure a Tone.BitCrusher node with current scaled values.
    */
@@ -1481,6 +1488,14 @@ function scaleSpatial() {
     return arguments.length ? ((clamp = Boolean(c)), scaler) : clamp;
   };
 
+  scaler.copy = function() {
+    return scaleSpatial()
+      .domain(domain)
+      .range(wetRange)
+      .decay(decayRange)
+      .clamp(clamp);
+  };
+
   scaler.createNode = function(Tone, val) {
     if (!Tone || !Tone.Freeverb) return null;
     const res = scaler(val);
@@ -1545,6 +1560,14 @@ function scaleEcho() {
 
   scaler.clamp = function(c) {
     return arguments.length ? ((clamp = Boolean(c)), scaler) : clamp;
+  };
+
+  scaler.copy = function() {
+    return scaleEcho()
+      .domain(domain)
+      .range(delayRange)
+      .feedback(feedbackRange)
+      .clamp(clamp);
   };
 
   scaler.createNode = function(Tone, val) {
@@ -1662,6 +1685,14 @@ function scaleChord() {
   };
 
   scaler.formulas = () => Object.keys(CHORD_FORMULAS);
+
+  scaler.copy = function() {
+    return scaleChord()
+      .root(rootNote)
+      .quality(defaultQuality)
+      .voicing(voicing)
+      .inversion(inversion);
+  };
 
   return scaler;
 }
@@ -1799,6 +1830,15 @@ function scaleRhythm() {
 
   scaler.clamp = function(c) {
     return arguments.length ? ((clamp = Boolean(c)), scaler) : clamp;
+  };
+
+  scaler.copy = function() {
+    return scaleRhythm()
+      .domain(domain)
+      .steps(totalSteps)
+      .range(pulseRange)
+      .subdivision(subdivision)
+      .clamp(clamp);
   };
 
   return scaler;
