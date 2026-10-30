@@ -1,7 +1,8 @@
 import vm from 'node:vm';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { assert, assertEqual } from './run-tests.js';
+import { describe, test } from 'node:test';
+import { assert, assertEqual } from './helpers.js';
 import * as src from '../src/index.js';
 
 /**
@@ -15,37 +16,33 @@ function loadBundle(file) {
   return context.d3Audio;
 }
 
-export function testBundle() {
-  const exportNames = Object.keys(src).filter(name => name !== 'default');
-  const scaleNames = exportNames.filter(name => /^scale[A-Z]/.test(name));
+const exportNames = Object.keys(src).filter(name => name !== 'default');
+const scaleNames = exportNames.filter(name => /^scale[A-Z]/.test(name));
 
+describe("Built browser bundles", () => {
   for (const file of ['d3-audio.js', 'd3-audio.min.js']) {
-    let bundle;
-    try {
-      bundle = loadBundle(file);
-    } catch (e) {
-      assert(false, `${file} loads without throwing (${e.message})`);
-      continue;
-    }
-    assert(bundle && typeof bundle === 'object', `${file} defines the d3Audio global`);
+    test(file, () => {
+      const bundle = loadBundle(file);
+      assert(bundle && typeof bundle === 'object', `${file} defines the d3Audio global`);
 
-    const missing = exportNames.filter(name => !(name in bundle));
-    assertEqual(missing, [], `${file} exposes every export of src/index.js`);
+      const missing = exportNames.filter(name => !(name in bundle));
+      assertEqual(missing, [], `${file} exposes every export of src/index.js`);
 
-    // Calling each scale runs its helpers, catching modules left out of the concatenated bundle
-    const failures = [];
-    for (const name of scaleNames) {
-      for (const input of [0.5, NaN]) {
-        try {
-          bundle[name]()(input);
-        } catch (e) {
-          failures.push(`${name}(${input}): ${e.message}`);
+      // Calling each scale runs its helpers, catching modules left out of the concatenated bundle
+      const failures = [];
+      for (const name of scaleNames) {
+        for (const input of [0.5, NaN]) {
+          try {
+            bundle[name]()(input);
+          } catch (e) {
+            failures.push(`${name}(${input}): ${e.message}`);
+          }
         }
       }
-    }
-    assertEqual(failures, [], `${file}: every scale evaluates valid and missing input without throwing`);
+      assertEqual(failures, [], `${file}: every scale evaluates valid and missing input without throwing`);
 
-    assertEqual(bundle.scaleGain().domain([0, 100])(50), src.scaleGain().domain([0, 100])(50), `${file} scaleGain matches source output`);
-    assertEqual(bundle.scalePitch().unknown("?")(NaN), "?", `${file} scalePitch honours unknown()`);
+      assertEqual(bundle.scaleGain().domain([0, 100])(50), src.scaleGain().domain([0, 100])(50), `${file} scaleGain matches source output`);
+      assertEqual(bundle.scalePitch().unknown("?")(NaN), "?", `${file} scalePitch honours unknown()`);
+    });
   }
-}
+});

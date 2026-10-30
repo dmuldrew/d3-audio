@@ -1223,7 +1223,7 @@ async function onSensorEvent(eventType) {
 
 ### 1. Build and Run Unit Tests
 ```bash
-docker run --rm -v "$PWD":/app -w /app node:20-alpine sh -c "node scripts/build.js && node test/run-tests.js"
+docker run --rm -v "$PWD":/app -w /app node:20-alpine sh -c "node scripts/build.js && npm test"
 ```
 
 ### 2. Run Interactive Showcase Server
@@ -1278,7 +1278,7 @@ d3-audio/
 │       ├── timeline.js
 │       └── track.js
 ├── examples/                      # 21 Interactive Demo Applications (01 through 21)
-└── test/                          # Unit & integration test suite (148 passing tests)
+└── test/                          # node:test suites (*.test.js) and shared assertion helpers
 ```
 
 ---
@@ -1291,107 +1291,24 @@ Run tests:
 ```bash
 npm test
 # Or with Docker:
-docker run --rm -v "$PWD":/app -w /app node:20-alpine node test/run-tests.js
+docker run --rm -v "$PWD":/app -w /app node:20-alpine npm test
 ```
 
 ```
-========================================
-       d3-audio Unit Test Suite         
-========================================
-
-[1/4] Testing Musical Theory & Conversions...
-  ✓ parseNote('C4') name is C
-  ✓ parseNote('C4') octave is 4
-  ✓ parseNote('C4') MIDI is 60
-  ✓ parseNote('C4') frequency is ~261.63 Hz
-  ✓ parseNote('A4') MIDI is 69
-  ✓ parseNote('A4') frequency is 440 Hz
-  ✓ parseNote('F#3') MIDI is 54
-  ✓ parseNote('Bb5') MIDI is 82
-  ✓ midiToNote(60) gives 'C4'
-  ✓ frequencyToNote(440) gives 'A4'
-  ✓ frequencyToMidi(440) gives 69
-  ✓ transpose('C4', 7) is 'G4'
-  ✓ transpose('C4', 12) is 'C5'
-  ✓ transpose('C4', -12) is 'C3'
-  ✓ Major scale has 7 notes
-  ✓ Pentatonic scale has 5 notes
-  ✓ Blues scale has 6 notes
-  ✓ C Pentatonic notes between C4 and C5 match expected degrees
-  ✓ Quantizing F#4 into C Pentatonic yields nearest scale note (E4 or G4)
-
-[2/4] Testing D3-like Audio Scalers...
-  ✓ scalePitch(0) gives C4
-  ✓ scalePitch(100) gives C5
-  ✓ scalePitch.frequency(0) is ~261.63 Hz
-  ✓ scalePitch.midi(100) is 72
-  ✓ Categorical pitch 'low' gives C3
-  ✓ Categorical pitch 'high' gives C5
-  ✓ scaleGain(0) is 0.2
-  ✓ scaleGain(100) is 1.0
-  ✓ scaleGain(50) is 0.6
-  ✓ scaleGain.db(100) is 0 dB
-  ✓ scaleDuration(0) is 16n
-  ✓ scaleDuration(10) is 1m
-  ✓ scaleDuration.seconds() returns numeric seconds
-  ✓ scalePan(0) is -1 (Full Left)
-  ✓ scalePan(400) is 0 (Center)
-  ✓ scalePan(800) is 1 (Full Right)
-  ✓ scaleFilter(0) is 200 Hz
-  ✓ scaleFilter(100) is 10000 Hz
-  ✓ scaleSample('crit') is 'crash'
-  ✓ scaleSample('warn') is 'snare'
-  ✓ scaleSample('info') is 'hihat'
-  ✓ scaleTempo(0) is 60 BPM
-  ✓ scaleTempo(100) is 160 BPM
-  ✓ scaleTempo(50) is 110 BPM
-
-[3/4] Testing Rhythmic Movements & Envelopes...
-  ✓ PRESETS.wiggle exists
-  ✓ PRESETS.flip exists
-  ✓ PRESETS.pulse exists
-  ✓ PRESETS.bounce exists
-  ✓ PRESETS.shake exists
-  ✓ PRESETS.ripple exists
-  ✓ PRESETS.glow exists
-  ✓ PRESETS.squash exists
-  ✓ ADSR at t=0 is 0
-  ✓ ADSR at t=1 is 0
-  ✓ ADSR at peak attack is high
-  ✓ Damped oscillation at t=0 is 0
-  ✓ Damped oscillation at t=1 is 0
-  ✓ Wiggle returns valid transform
-  ✓ Wiggle rotation is numeric
-  ✓ Flip rotateY at start is 0
-  ✓ Flip rotateY at finish is 360
-  ✓ Pulse scale at start is 1.0
-  ✓ Pulse scale at peak is ~1.4
-  ✓ Pulse scale at end is ~1.0
-  ✓ Bounce returns translate transform
-  ✓ Shake provides translateX
-  ✓ Ripple scale at t=0 is 1.0
-  ✓ Ripple opacity at t=0 is 1.0
-  ✓ Ripple opacity at t=1 is 0.0
-  ✓ Glow returns drop-shadow filter
-  ✓ Squash scaleX at start is 1.0
-  ✓ Squash scaleY at start is 1.0
-
-[4/4] Testing Timeline & Track Orchestration...
-  ✓ Timeline initialized with 130 BPM
-  ✓ Timeline loop is true
-  ✓ Timeline loopEnd is 2m
-  ✓ Timeline default track holds 3 data points
-  ✓ Built 3 scheduled events
-  ✓ First event pitch is C4
-  ✓ Second event pitch is E4
-  ✓ Third event pitch is G4
-  ✓ Third event gain is 1.0
-  ✓ Timeline created 'drums' track
-  ✓ Drums track holds 3 events
-
-----------------------------------------
-✔ ALL 148 TESTS PASSED SUCCESSFULLY!
+▶ Advanced scales, theory & a11y
+  ✔ Euclidean Rhythm Generator & Bjorklund Algorithm (1.31ms)
+  ✔ Statistical Uncertainty Scaler (scaleUncertainty / scaleCrush) (0.28ms)
+  ...
+▶ Missing-data handling via scale.unknown()
+  ✔ scalePitch returns unknown() for missing input (2.02ms)
+  ...
+ℹ tests 96
+ℹ suites 13
+ℹ pass 96
+ℹ fail 0
 ```
+
+Each file in `test/` is a `node:test` suite (`*.test.js`) using the assertion helpers in `test/helpers.js`. Run one file with `node --test test/scales.test.js`, or filter by test name with `node --test --test-name-pattern="scaleChord" test/*.test.js`.
 
 ---
 

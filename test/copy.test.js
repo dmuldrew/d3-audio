@@ -1,4 +1,5 @@
-import { assert, assertEqual } from './run-tests.js';
+import { describe, test } from 'node:test';
+import { assert, assertEqual } from './helpers.js';
 import * as d3Audio from '../src/index.js';
 
 /**
@@ -80,26 +81,31 @@ const ALIASES = { scaleCrush: "scaleUncertainty", scaleReverb: "scaleSpatial", s
 
 const outputs = (scale, inputs) => JSON.stringify(inputs.map(x => scale(x)));
 
-export function testCopy() {
-  const scaleNames = Object.keys(d3Audio).filter(name => /^scale[A-Z]/.test(name));
-  const untested = scaleNames.filter(name => !CASES[name] && !ALIASES[name]);
-  assertEqual(untested, [], "Every exported scale has a copy() test case");
+const scaleNames = Object.keys(d3Audio).filter(name => /^scale[A-Z]/.test(name));
 
-  for (const name of scaleNames) {
-    const { configure, mutate, inputs, getters = [] } = CASES[name] || CASES[ALIASES[name]];
-    const original = configure(d3Audio[name]());
-    assertEqual(typeof original.copy, "function", `${name} has copy()`);
+describe("scale.copy() across all scales", () => {
+  test("every exported scale has a copy() test case", () => {
+    const untested = scaleNames.filter(name => !CASES[name] && !ALIASES[name]);
+    assertEqual(untested, [], "Every exported scale has a copy() test case");
+  });
 
-    const copy = original.copy();
-    assert(typeof copy === "function" && copy !== original, `${name}.copy() returns a new scale`);
-    assertEqual(outputs(copy, inputs), outputs(original, inputs), `${name}.copy() reproduces the original's configuration`);
-    for (const getter of getters) {
-      assertEqual(copy[getter](), original[getter](), `${name}.copy() preserves ${getter}()`);
-    }
+  for (const name of scaleNames.filter(name => CASES[name] || ALIASES[name])) {
+    test(name, () => {
+      const { configure, mutate, inputs, getters = [] } = CASES[name] || CASES[ALIASES[name]];
+      const original = configure(d3Audio[name]());
+      assertEqual(typeof original.copy, "function", `${name} has copy()`);
 
-    const before = outputs(original, inputs);
-    mutate(copy);
-    assert(outputs(copy, inputs) !== before, `${name} copy changes when reconfigured`);
-    assertEqual(outputs(original, inputs), before, `${name} original is unaffected by changes to its copy`);
+      const copy = original.copy();
+      assert(typeof copy === "function" && copy !== original, `${name}.copy() returns a new scale`);
+      assertEqual(outputs(copy, inputs), outputs(original, inputs), `${name}.copy() reproduces the original's configuration`);
+      for (const getter of getters) {
+        assertEqual(copy[getter](), original[getter](), `${name}.copy() preserves ${getter}()`);
+      }
+
+      const before = outputs(original, inputs);
+      mutate(copy);
+      assert(outputs(copy, inputs) !== before, `${name} copy changes when reconfigured`);
+      assertEqual(outputs(original, inputs), before, `${name} original is unaffected by changes to its copy`);
+    });
   }
-}
+});
