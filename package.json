@@ -4,6 +4,12 @@
   "description": "D3 module for audio-visual data sonification and rhythmic choreography mapped to Tone.js timelines",
   "main": "dist/d3-audio.js",
   "module": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./src/*": "./src/*",
+    "./dist/*": "./dist/*",
+    "./package.json": "./package.json"
+  },
   "type": "module",
   "scripts": {
     "build": "node scripts/build.js",
