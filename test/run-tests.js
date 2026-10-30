@@ -3,6 +3,10 @@ import { testScales } from './test-scales.js';
 import { testMovements } from './test-movements.js';
 import { testTimeline } from './test-timeline.js';
 import { testAdvanced } from './test-advanced.js';
+import { testAudio } from './test-audio.js';
+import { testUI } from './test-ui.js';
+import { testEdgeCases } from './test-edge-cases.js';
+import { testChoreography } from './test-choreography.js';
 
 let passed = 0;
 let failed = 0;
@@ -47,20 +51,32 @@ async function runAll() {
   console.log('       d3-audio Unit Test Suite         ');
   console.log('========================================\n');
 
-  console.log('\x1b[36m[1/5] Testing Musical Theory & Conversions...\x1b[0m');
+  console.log('\x1b[36m[1/9] Testing Musical Theory & Conversions...\x1b[0m');
   testMusical();
 
-  console.log('\n\x1b[36m[2/5] Testing D3-like Audio Scalers...\x1b[0m');
+  console.log('\n\x1b[36m[2/9] Testing D3-like Audio Scalers...\x1b[0m');
   testScales();
 
-  console.log('\n\x1b[36m[3/5] Testing Rhythmic Movements & Envelopes...\x1b[0m');
+  console.log('\n\x1b[36m[3/9] Testing Rhythmic Movements & Envelopes...\x1b[0m');
   testMovements();
 
-  console.log('\n\x1b[36m[4/5] Testing Timeline & Track Orchestration...\x1b[0m');
+  console.log('\n\x1b[36m[4/9] Testing Timeline & Track Orchestration...\x1b[0m');
   testTimeline();
 
-  console.log('\n\x1b[36m[5/5] Testing Advanced Scalers, Theory & a11y...\x1b[0m');
+  console.log('\n\x1b[36m[5/9] Testing Advanced Scalers, Theory & a11y...\x1b[0m');
   testAdvanced();
+
+  console.log('\n\x1b[36m[6/9] Testing Audio Engine, Synths & Granular Scrubber...\x1b[0m');
+  testAudio();
+
+  console.log('\n\x1b[36m[7/9] Testing UI Components & Accessible Chart Bridge...\x1b[0m');
+  testUI();
+
+  console.log('\n\x1b[36m[8/9] Testing Boundary Conditions & Robustness...\x1b[0m');
+  testEdgeCases();
+
+  console.log('\n\x1b[36m[9/9] Testing Choreography Presets & D3 Transitions...\x1b[0m');
+  testChoreography();
 
   console.log('\n----------------------------------------');
   if (failed === 0) {

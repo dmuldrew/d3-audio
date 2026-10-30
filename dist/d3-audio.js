@@ -418,6 +418,7 @@ function scalePitch() {
   }
 
   function interpolate(t) {
+    if (isNaN(t)) t = 0.5;
     if (isClamped) {
       t = Math.max(0, Math.min(1, t));
     }
@@ -457,7 +458,7 @@ function scalePitch() {
 
     const d0 = domain[0];
     const d1 = domain[domain.length - 1];
-    let t = (x - d0) / (d1 - d0);
+    let t = d1 === d0 ? 0.5 : (x - d0) / (d1 - d0);
     return interpolate(t).note;
   }
 
@@ -471,7 +472,7 @@ function scalePitch() {
 
     const d0 = domain[0];
     const d1 = domain[domain.length - 1];
-    let t = (x - d0) / (d1 - d0);
+    let t = d1 === d0 ? 0.5 : (x - d0) / (d1 - d0);
     return interpolate(t).frequency;
   };
 
@@ -485,7 +486,7 @@ function scalePitch() {
 
     const d0 = domain[0];
     const d1 = domain[domain.length - 1];
-    let t = (x - d0) / (d1 - d0);
+    let t = d1 === d0 ? 0.5 : (x - d0) / (d1 - d0);
     return interpolate(t).midi;
   };
 
@@ -2607,7 +2608,7 @@ function choreography() {
     };
 
     // Ensure transform origin is set for SVG/DOM elements
-    const isSvg = el instanceof SVGElement;
+    const isSvg = typeof SVGElement !== 'undefined' && el instanceof SVGElement;
     if (isSvg) {
       el.style.transformBox = 'fill-box';
       el.style.transformOrigin = extraOpts.origin || 'center';
@@ -2617,6 +2618,13 @@ function choreography() {
 
     const initialTransform = el.style.transform || '';
     const initialFilter = el.style.filter || '';
+
+    const rAF = typeof requestAnimationFrame !== 'undefined'
+      ? requestAnimationFrame
+      : (cb) => setTimeout(() => cb(Date.now()), 16);
+    const cAF = typeof cancelAnimationFrame !== 'undefined'
+      ? cancelAnimationFrame
+      : (id) => clearTimeout(id);
 
     let startTime = null;
     let animId = null;
@@ -2654,7 +2662,7 @@ function choreography() {
       }
 
       if (t < 1.0) {
-        animId = requestAnimationFrame(step);
+        animId = rAF(step);
       } else {
         // Reset to rest state
         el.style.transform = '';
@@ -2667,11 +2675,11 @@ function choreography() {
       }
     }
 
-    animId = requestAnimationFrame(step);
+    animId = rAF(step);
 
     return {
       cancel: () => {
-        if (animId) cancelAnimationFrame(animId);
+        if (animId) cAF(animId);
         el.style.transform = '';
         el.style.filter = '';
       }

@@ -71,7 +71,7 @@ export function choreography() {
     };
 
     // Ensure transform origin is set for SVG/DOM elements
-    const isSvg = el instanceof SVGElement;
+    const isSvg = typeof SVGElement !== 'undefined' && el instanceof SVGElement;
     if (isSvg) {
       el.style.transformBox = 'fill-box';
       el.style.transformOrigin = extraOpts.origin || 'center';
@@ -81,6 +81,13 @@ export function choreography() {
 
     const initialTransform = el.style.transform || '';
     const initialFilter = el.style.filter || '';
+
+    const rAF = typeof requestAnimationFrame !== 'undefined'
+      ? requestAnimationFrame
+      : (cb) => setTimeout(() => cb(Date.now()), 16);
+    const cAF = typeof cancelAnimationFrame !== 'undefined'
+      ? cancelAnimationFrame
+      : (id) => clearTimeout(id);
 
     let startTime = null;
     let animId = null;
@@ -118,7 +125,7 @@ export function choreography() {
       }
 
       if (t < 1.0) {
-        animId = requestAnimationFrame(step);
+        animId = rAF(step);
       } else {
         // Reset to rest state
         el.style.transform = '';
@@ -131,11 +138,11 @@ export function choreography() {
       }
     }
 
-    animId = requestAnimationFrame(step);
+    animId = rAF(step);
 
     return {
       cancel: () => {
-        if (animId) cancelAnimationFrame(animId);
+        if (animId) cAF(animId);
         el.style.transform = '';
         el.style.filter = '';
       }

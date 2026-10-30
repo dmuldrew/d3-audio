@@ -40,6 +40,7 @@ export function scalePitch() {
   }
 
   function interpolate(t) {
+    if (isNaN(t)) t = 0.5;
     if (isClamped) {
       t = Math.max(0, Math.min(1, t));
     }
@@ -79,7 +80,7 @@ export function scalePitch() {
 
     const d0 = domain[0];
     const d1 = domain[domain.length - 1];
-    let t = (x - d0) / (d1 - d0);
+    let t = d1 === d0 ? 0.5 : (x - d0) / (d1 - d0);
     return interpolate(t).note;
   }
 
@@ -93,7 +94,7 @@ export function scalePitch() {
 
     const d0 = domain[0];
     const d1 = domain[domain.length - 1];
-    let t = (x - d0) / (d1 - d0);
+    let t = d1 === d0 ? 0.5 : (x - d0) / (d1 - d0);
     return interpolate(t).frequency;
   };
 
@@ -107,7 +108,7 @@ export function scalePitch() {
 
     const d0 = domain[0];
     const d1 = domain[domain.length - 1];
-    let t = (x - d0) / (d1 - d0);
+    let t = d1 === d0 ? 0.5 : (x - d0) / (d1 - d0);
     return interpolate(t).midi;
   };
 
