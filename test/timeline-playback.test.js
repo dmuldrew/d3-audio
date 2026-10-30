@@ -1,4 +1,5 @@
-import { assert, assertEqual } from './run-tests.js';
+import { describe, test } from 'node:test';
+import { assert, assertEqual } from './helpers.js';
 import { Timeline } from '../src/timeline/index.js';
 
 /**
@@ -84,11 +85,8 @@ function recordEvents(tl) {
   return log;
 }
 
-export async function testTimelinePlayback() {
-  // --------------------------------------------------------------------------
-  // 1. schedule() pushes settings onto the Transport and builds one Part per track
-  // --------------------------------------------------------------------------
-  {
+describe("Timeline playback & transport lifecycle", () => {
+  test("schedule() pushes settings onto the Transport and builds one Part per track", async () => {
     const { Tone, tl } = setup({ bpm: 96, loop: true, loopStart: "1m", loopEnd: "3m", timeSignature: [3, 4] });
     tl.data([{ pitch: "C4" }, { pitch: "E4" }]).time((d, i) => i * 0.5);
     tl.track("drums", { instrument: createMockInstrument() }).data([{ sample: "kick" }]);
@@ -108,12 +106,9 @@ export async function testTimelinePlayback() {
     tl.schedule();
     assert(Tone.parts[0].disposed && Tone.parts[1].disposed, "Re-scheduling disposes previously scheduled Parts");
     assertEqual(tl.scheduledParts.length, 2, "Re-scheduling keeps exactly one live Part per track");
-  }
+  });
 
-  // --------------------------------------------------------------------------
-  // 2. Mute and solo decide which tracks get scheduled
-  // --------------------------------------------------------------------------
-  {
+  test("Mute and solo decide which tracks get scheduled", async () => {
     const { Tone, tl } = setup();
     tl.data([{ pitch: "C4" }]);
     const bass = tl.track("bass", { instrument: createMockInstrument() }).data([{ pitch: "C2" }]);
@@ -133,12 +128,9 @@ export async function testTimelinePlayback() {
     lead.mute(true);
     tl.schedule();
     assertEqual(tl.scheduledParts.length, 0, "A track that is both soloed and muted stays silent");
-  }
+  });
 
-  // --------------------------------------------------------------------------
-  // 3. Part callback triggers the instrument and emits a 'step' event via Tone.Draw
-  // --------------------------------------------------------------------------
-  {
+  test("Part callback triggers the instrument and emits a 'step' event via Tone.Draw", async () => {
     const { Tone, tl, instrument } = setup();
     const log = recordEvents(tl);
     tl.data([{ pitch: "G4", gain: 0.5, duration: "4n", pan: -0.25 }]);
@@ -159,12 +151,9 @@ export async function testTimelinePlayback() {
     assertEqual(steps.length, 1, "One 'step' event is emitted per triggered event");
     assertEqual(steps[0].data.time, 1.25, "'step' event carries the scheduled time");
     assertEqual(time, 0, "Event time defaults to index * 0.25 beats");
-  }
+  });
 
-  // --------------------------------------------------------------------------
-  // 4. Track trigger details: zero gain, sample tracks, muted triggers
-  // --------------------------------------------------------------------------
-  {
+  test("Track trigger details: zero gain, sample tracks, muted triggers", async () => {
     const { tl, instrument } = setup();
     tl.data([{ pitch: "C4", gain: 0 }]);
     const [event] = tl.defaultTrack.buildEvents();
@@ -190,12 +179,9 @@ export async function testTimelinePlayback() {
     drums.mute(true);
     drums.triggerEvent(snare, 4, null);
     assertEqual(sampler.samples.length, 2, "Muted track ignores triggerEvent");
-  }
+  });
 
-  // --------------------------------------------------------------------------
-  // 5. play / pause / resume / stop lifecycle and emitted events
-  // --------------------------------------------------------------------------
-  {
+  test("play / pause / resume / stop lifecycle and emitted events", async () => {
     const { Tone, engine, tl } = setup({ bpm: 140 });
     const log = recordEvents(tl);
     tl.data([{ pitch: "C4" }]);
@@ -234,12 +220,9 @@ export async function testTimelinePlayback() {
     assertEqual(tl.progressInterval, null, "stop() clears the progress tracker");
     assert(!tl.isPlaying && !tl.isPaused, "stop() clears playing and paused flags");
     assertEqual(log.find(e => e.name === 'stop').data.time, 0, "'stop' event reports time 0");
-  }
+  });
 
-  // --------------------------------------------------------------------------
-  // 6. Progress tracker emits while playing
-  // --------------------------------------------------------------------------
-  {
+  test("Progress tracker emits while playing", async () => {
     const { Tone, tl } = setup();
     const log = recordEvents(tl);
     tl.data([{ pitch: "C4" }]);
@@ -257,12 +240,9 @@ export async function testTimelinePlayback() {
     const countAfterStop = log.filter(e => e.name === 'progress').length;
     await new Promise(resolve => setTimeout(resolve, 80));
     assertEqual(log.filter(e => e.name === 'progress').length, countAfterStop, "No 'progress' events are emitted after stop()");
-  }
+  });
 
-  // --------------------------------------------------------------------------
-  // 7. seek(), transport setters, missing Tone, and dispose()
-  // --------------------------------------------------------------------------
-  {
+  test("seek(), transport setters and dispose()", async () => {
     const { Tone, tl } = setup();
     const log = recordEvents(tl);
 
@@ -285,9 +265,9 @@ export async function testTimelinePlayback() {
     tl.dispose();
     assert(extra.disposed && defaultInstrument.disposed, "dispose() disposes every track's instrument");
     assertEqual(tl.tracks.size, 0, "dispose() clears all tracks");
-  }
+  });
 
-  {
+  test("Without Tone.js, playback calls are safe no-ops", async () => {
     const engine = createMockEngine(null);
     const tl = new Timeline({ instrument: createMockInstrument() }, engine);
     const originalWarn = console.warn;
@@ -305,5 +285,5 @@ export async function testTimelinePlayback() {
     assert(warned, "play() warns when Tone.js is unavailable");
     assert(!tl.isPlaying, "Timeline stays stopped when Tone.js is unavailable");
     assertEqual(tl.scheduledParts.length, 0, "schedule() is a no-op without Tone.js");
-  }
-}
+  });
+});
