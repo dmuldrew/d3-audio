@@ -79,9 +79,6 @@ export function choreography() {
       el.style.transformOrigin = extraOpts.origin || 'center';
     }
 
-    const initialTransform = el.style.transform || '';
-    const initialFilter = el.style.filter || '';
-
     const rAF = typeof requestAnimationFrame !== 'undefined'
       ? requestAnimationFrame
       : (cb) => setTimeout(() => cb(Date.now()), 16);
@@ -161,7 +158,7 @@ export function choreography() {
     }
   }
 
-  choreo.trigger = function(element, options = {}) {
+  choreo.trigger = function(element) {
     return animateElement(element, element.__data__ || null, 0, [element]);
   };
 

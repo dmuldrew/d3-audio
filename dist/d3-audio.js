@@ -1214,7 +1214,6 @@ function scaleTempo() {
 function scaleTension() {
   let domain = [0, 100];
   let rootNote = "C3";
-  let mode = "pentatonic";
   let detuneRange = [0, 60]; // cents of microtonal tension
   let filterRange = [400, 8000]; // Hz
   let tempoRange = [1.0, 1.8]; // speed multiplier
@@ -2456,7 +2455,7 @@ function pulse(t, {
   intensity = 1.0,
   maxScale = 1.35
 } = {}) {
-  let scaleFactor = 1.0;
+  let scaleFactor;
   const boost = (maxScale - 1.0) * intensity;
 
   if (t < 0.2) {
@@ -2642,8 +2641,8 @@ function squash(t, {
   intensity = 1.0,
   direction = "vertical"
 } = {}) {
-  let scaleMain = 1.0;
-  let scaleCross = 1.0;
+  let scaleMain;
+  let scaleCross;
 
   if (t < 0.15) {
     // Initial squash on impact: wide & flat
@@ -2754,9 +2753,6 @@ function choreography() {
       el.style.transformOrigin = extraOpts.origin || 'center';
     }
 
-    const initialTransform = el.style.transform || '';
-    const initialFilter = el.style.filter || '';
-
     const rAF = typeof requestAnimationFrame !== 'undefined'
       ? requestAnimationFrame
       : (cb) => setTimeout(() => cb(Date.now()), 16);
@@ -2836,7 +2832,7 @@ function choreography() {
     }
   }
 
-  choreo.trigger = function(element, options = {}) {
+  choreo.trigger = function(element) {
     return animateElement(element, element.__data__ || null, 0, [element]);
   };
 
@@ -3989,7 +3985,7 @@ class Track {
     this.filterAccessor = d => d.filter !== undefined ? d.filter : undefined;
     this.sampleAccessor = d => d.sample || d.sound || undefined;
     this.movementAccessor = d => d.movement || null;
-    this.elementAccessor = (d, i) => d.element || null;
+    this.elementAccessor = d => d.element || null;
 
     // Instrument setup
     this.instrumentType = options.type || 'synth'; // 'synth', 'sample', or custom
@@ -4077,10 +4073,9 @@ class Track {
 
   /**
    * Evaluates and builds scheduled timeline events from the dataset.
-   * @param {number} globalBpm
    * @returns {Array<object>}
    */
-  buildEvents(globalBpm = 120) {
+  buildEvents() {
     const events = [];
 
     this.dataset.forEach((datum, index) => {
@@ -4400,7 +4395,7 @@ class Timeline {
       if (track.isMuted) continue;
       if (hasSolo && !track.isSolo) continue;
 
-      const events = track.buildEvents(this._bpm);
+      const events = track.buildEvents();
 
       // Create Tone.Part for this track's events
       const part = new this.Tone.Part((time, event) => {

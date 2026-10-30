@@ -25,7 +25,7 @@ export class Track {
     this.filterAccessor = d => d.filter !== undefined ? d.filter : undefined;
     this.sampleAccessor = d => d.sample || d.sound || undefined;
     this.movementAccessor = d => d.movement || null;
-    this.elementAccessor = (d, i) => d.element || null;
+    this.elementAccessor = d => d.element || null;
 
     // Instrument setup
     this.instrumentType = options.type || 'synth'; // 'synth', 'sample', or custom
@@ -113,10 +113,9 @@ export class Track {
 
   /**
    * Evaluates and builds scheduled timeline events from the dataset.
-   * @param {number} globalBpm
    * @returns {Array<object>}
    */
-  buildEvents(globalBpm = 120) {
+  buildEvents() {
     const events = [];
 
     this.dataset.forEach((datum, index) => {
