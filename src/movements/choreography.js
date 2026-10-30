@@ -18,6 +18,38 @@ export const PRESETS = {
   squash
 };
 
+// Inline styles an element had before its first running movement, keyed by
+// element. Overlapping movements share one entry so the styles are restored
+// only when the last of them finishes, never to a mid-animation frame.
+const restingStyles = new WeakMap();
+
+function beginMovement(el) {
+  let entry = restingStyles.get(el);
+  if (!entry) {
+    entry = { active: 0, written: new Set(), styles: {} };
+    restingStyles.set(el, entry);
+  }
+  entry.active++;
+  return entry;
+}
+
+function writeStyle(el, entry, prop, value) {
+  if (!entry.written.has(prop)) {
+    entry.written.add(prop);
+    entry.styles[prop] = el.style[prop] || '';
+  }
+  el.style[prop] = value;
+}
+
+function endMovement(el, entry) {
+  entry.active--;
+  if (entry.active > 0) return;
+  restingStyles.delete(el);
+  for (const prop of entry.written) {
+    el.style[prop] = entry.styles[prop];
+  }
+}
+
 /**
  * Creates a D3 choreography animator that applies rhythmic physical movements to DOM/SVG elements.
  * 
@@ -79,9 +111,6 @@ export function choreography() {
       el.style.transformOrigin = extraOpts.origin || 'center';
     }
 
-    const initialTransform = el.style.transform || '';
-    const initialFilter = el.style.filter || '';
-
     const rAF = typeof requestAnimationFrame !== 'undefined'
       ? requestAnimationFrame
       : (cb) => setTimeout(() => cb(Date.now()), 16);
@@ -91,6 +120,14 @@ export function choreography() {
 
     let startTime = null;
     let animId = null;
+    let finished = false;
+    const resting = beginMovement(el);
+
+    function finish() {
+      if (finished) return;
+      finished = true;
+      endMovement(el, resting);
+    }
 
     if (onStartCallback) {
       onStartCallback(el, datum, index);
@@ -105,19 +142,16 @@ export function choreography() {
 
       // Apply transform & styling
       if (frameResult.transform !== undefined) {
-        if (frameResult.transform === 'none' || frameResult.transform === '') {
-          el.style.transform = '';
-        } else {
-          el.style.transform = frameResult.transform;
-        }
+        const transform = frameResult.transform === 'none' ? '' : frameResult.transform;
+        writeStyle(el, resting, 'transform', transform);
       }
 
       if (frameResult.filter !== undefined) {
-        el.style.filter = frameResult.filter;
+        writeStyle(el, resting, 'filter', frameResult.filter);
       }
 
       if (frameResult.opacity !== undefined && movementType === 'ripple') {
-        el.style.opacity = frameResult.opacity;
+        writeStyle(el, resting, 'opacity', frameResult.opacity);
       }
 
       if (onProgressCallback) {
@@ -127,10 +161,8 @@ export function choreography() {
       if (t < 1.0) {
         animId = rAF(step);
       } else {
-        // Reset to rest state
-        el.style.transform = '';
-        if (frameResult.filter !== undefined) el.style.filter = '';
-        if (movementType === 'ripple') el.style.opacity = '';
+        // Return the element to the inline styles it had before moving
+        finish();
 
         if (onEndCallback) {
           onEndCallback(el, datum, index);
@@ -143,8 +175,7 @@ export function choreography() {
     return {
       cancel: () => {
         if (animId) cAF(animId);
-        el.style.transform = '';
-        el.style.filter = '';
+        finish();
       }
     };
   }

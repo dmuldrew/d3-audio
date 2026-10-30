@@ -128,4 +128,61 @@ describe("Choreography presets & D3 transitions", () => {
       assert(false, `audioTransition execution error: ${err.message}`);
     }
   });
+
+  test("Movements restore the element's own inline styles", async () => {
+    const run = (movement, node) => {
+      const choreo = choreography().movement(movement).duration(0.05);
+      const ended = new Promise(resolve => choreo.onEnd(resolve));
+      const handle = choreo.trigger(node);
+      return { ended, handle };
+    };
+
+    // Transform restored after a transform movement
+    const positioned = createMockNode();
+    positioned.style.transform = "translate(10px, 20px)";
+    await run("wiggle", positioned).ended;
+    assertEqual(positioned.style.transform, "translate(10px, 20px)", "Transform-based movement restores the element's original transform");
+
+    // Filter restored after a filter movement; transform untouched by glow
+    const filtered = createMockNode();
+    filtered.style.filter = "blur(1px)";
+    filtered.style.transform = "scale(2)";
+    await run("glow", filtered).ended;
+    assertEqual(filtered.style.filter, "blur(1px)", "Filter-based movement restores the element's original filter");
+    assertEqual(filtered.style.transform, "scale(2)", "Movement leaves styles it never animated untouched");
+
+    // Ripple restores opacity
+    const faded = createMockNode();
+    faded.style.opacity = "0.5";
+    await run("ripple", faded).ended;
+    assertEqual(faded.style.opacity, "0.5", "Ripple restores the element's original opacity");
+
+    // Cancelling mid-movement also restores
+    const cancelled = createMockNode();
+    cancelled.style.transform = "rotate(5deg)";
+    const { handle } = run("wiggle", cancelled);
+    await new Promise(resolve => setTimeout(resolve, 25));
+    handle.cancel();
+    assertEqual(cancelled.style.transform, "rotate(5deg)", "cancel() restores the element's original transform");
+  });
+
+  test("Overlapping movements restore the pre-movement styles, not a mid-animation frame", async () => {
+    const node = createMockNode();
+    node.style.transform = "translate(4px, 4px)";
+
+    const first = choreography().movement("wiggle").duration(0.1);
+    const second = choreography().movement("pulse").duration(0.1);
+    const firstEnded = new Promise(resolve => first.onEnd(resolve));
+    const secondEnded = new Promise(resolve => second.onEnd(resolve));
+
+    first.trigger(node);
+    await new Promise(resolve => setTimeout(resolve, 50));
+    assert(node.style.transform !== "translate(4px, 4px)", "First movement is mid-animation when the second starts");
+    second.trigger(node);
+
+    await firstEnded;
+    assert(node.style.transform !== "translate(4px, 4px)", "Styles are not restored while another movement is still running");
+    await secondEnded;
+    assertEqual(node.style.transform, "translate(4px, 4px)", "Styles return to the pre-movement transform after the last movement ends");
+  });
 });
