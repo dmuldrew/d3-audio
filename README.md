@@ -1327,6 +1327,12 @@ docker run --rm -v "$PWD":/app -w /app node:20-alpine npm test
 
 Each file in `test/` is a `node:test` suite (`*.test.js`) using the assertion helpers in `test/helpers.js`. Run one file with `node --test test/scales.test.js`, or filter by test name with `node --test --test-name-pattern="scaleChord" test/*.test.js`.
 
+Coverage and linting (both run in CI):
+```bash
+npm run test:coverage   # fails below 80% lines, 60% branches or 80% functions in src/ (Node 22.8+)
+npm run lint            # ESLint over src/, test/ and scripts/
+```
+
 ---
 
 ## 📄 License

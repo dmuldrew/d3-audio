@@ -25,7 +25,7 @@ describe("Timeline & track orchestration", () => {
 
     assertEqual(tl.data().length, 3, "Timeline default track holds 3 data points");
 
-    const builtEvents = tl.defaultTrack.buildEvents(130);
+    const builtEvents = tl.defaultTrack.buildEvents();
     assertEqual(builtEvents.length, 3, "Built 3 scheduled events");
     assertEqual(builtEvents[0].pitch, "C4", "First event pitch is C4");
     assertEqual(builtEvents[1].pitch, "E4", "Second event pitch is E4");

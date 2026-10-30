@@ -1,5 +1,5 @@
-import { parseNote, midiToNote, midiToFrequency, frequencyToMidi } from '../musical/notes.js';
-import { generateScaleNotes, quantizeToScale, SCALE_INTERVALS } from '../musical/scales.js';
+import { parseNote, midiToNote } from '../musical/notes.js';
+import { generateScaleNotes } from '../musical/scales.js';
 import { equalLoudnessCompensation } from '../musical/equalLoudness.js';
 import { isMissing } from './unknown.js';
 
