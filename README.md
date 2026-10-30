@@ -494,6 +494,16 @@ pitch.notes();         // Returns array of all available scale notes in range
 pitch.ticks(5);        // Returns sample domain ticks with note, frequency, and gain metadata
 ```
 
+#### Missing data
+
+Like d3's continuous scales, `scalePitch`, `scaleGain`, `scalePan`, `scaleFilter`, `scaleTempo`, `scaleDuration` and `scaleTension` return `scale.unknown()` (default `undefined`) for `null`, `undefined`, `NaN` or non-numeric input, instead of an arbitrary note or `NaN`:
+
+```javascript
+const gain = d3Audio.scaleGain().domain([0, 100]).unknown(0); // missing values play silently
+gain(null); // 0
+gain(NaN);  // 0
+```
+
 #### Supported Musical Scales & Modes
 
 | Scale Name | Semitone Intervals | Characteristics |

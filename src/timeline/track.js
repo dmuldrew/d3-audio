@@ -19,7 +19,7 @@ export class Track {
     // Accessors
     this.timeAccessor = (d, i) => i * 0.25; // default 16th or quarter notes
     this.pitchAccessor = d => d.pitch || d.note || "C4";
-    this.gainAccessor = d => d.gain || d.velocity || d.volume || 0.8;
+    this.gainAccessor = d => d.gain ?? d.velocity ?? d.volume ?? 0.8;
     this.durationAccessor = d => d.duration || "8n";
     this.panAccessor = d => d.pan !== undefined ? d.pan : 0;
     this.filterAccessor = d => d.filter !== undefined ? d.filter : undefined;

@@ -1,3 +1,5 @@
+import { isMissing } from './unknown.js';
+
 /**
  * Creates a D3-like audio filter scale that maps data to cutoff frequencies (Hz), Q resonance, and synth timbre parameters.
  */
@@ -8,6 +10,7 @@ export function scaleFilter() {
   let scaleType = "logarithmic"; // "logarithmic", "exponential", "linear"
   let isClamped = true;
   let isCategorical = false;
+  let unknownValue = undefined;
 
   function transformT(t) {
     if (isClamped) {
@@ -31,6 +34,7 @@ export function scaleFilter() {
       if (idx === -1) return frequencyRange[0];
       t = domain.length > 1 ? idx / (domain.length - 1) : 0.5;
     } else {
+      if (isMissing(x)) return unknownValue;
       const d0 = domain[0];
       const d1 = domain[domain.length - 1];
       t = d1 === d0 ? 0.5 : (x - d0) / (d1 - d0);
@@ -56,6 +60,7 @@ export function scaleFilter() {
       if (idx === -1) return qRange[0];
       t = domain.length > 1 ? idx / (domain.length - 1) : 0.5;
     } else {
+      if (isMissing(x)) return unknownValue;
       const d0 = domain[0];
       const d1 = domain[domain.length - 1];
       t = d1 === d0 ? 0.5 : (x - d0) / (d1 - d0);
@@ -89,6 +94,12 @@ export function scaleFilter() {
     return scale;
   };
 
+  scale.unknown = function(_) {
+    if (!arguments.length) return unknownValue;
+    unknownValue = _;
+    return scale;
+  };
+
   scale.clamp = function(_) {
     if (!arguments.length) return isClamped;
     isClamped = !!_;
@@ -101,7 +112,8 @@ export function scaleFilter() {
       .range(frequencyRange.slice())
       .qRange(qRange.slice())
       .type(scaleType)
-      .clamp(isClamped);
+      .clamp(isClamped)
+      .unknown(unknownValue);
   };
 
   return scale;

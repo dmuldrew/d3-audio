@@ -1,3 +1,5 @@
+import { isMissing } from './unknown.js';
+
 /**
  * Creates a D3-like tempo scale that maps continuous data to playback tempo in BPM.
  */
@@ -5,8 +7,10 @@ export function scaleTempo() {
   let domain = [0, 1];
   let range = [60, 180]; // BPM
   let isClamped = true;
+  let unknownValue = undefined;
 
   function scale(x) {
+    if (isMissing(x)) return unknownValue;
     const d0 = domain[0];
     const d1 = domain[domain.length - 1];
     let t = d1 === d0 ? 0.5 : (x - d0) / (d1 - d0);
@@ -28,6 +32,12 @@ export function scaleTempo() {
     return scale;
   };
 
+  scale.unknown = function(_) {
+    if (!arguments.length) return unknownValue;
+    unknownValue = _;
+    return scale;
+  };
+
   scale.clamp = function(_) {
     if (!arguments.length) return isClamped;
     isClamped = !!_;
@@ -38,7 +48,8 @@ export function scaleTempo() {
     return scaleTempo()
       .domain(domain.slice())
       .range(range.slice())
-      .clamp(isClamped);
+      .clamp(isClamped)
+      .unknown(unknownValue);
   };
 
   return scale;

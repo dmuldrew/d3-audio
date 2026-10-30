@@ -403,6 +403,7 @@ function scalePitch() {
   let isClamped = true;
   let isCategorical = false;
   let isEqualLoudness = false;
+  let unknownValue = undefined;
 
   // Cached scale degrees
   let cachedScaleNotes = null;
@@ -456,6 +457,7 @@ function scalePitch() {
       return interpolate(t).note;
     }
 
+    if (isMissing(x)) return unknownValue;
     const d0 = domain[0];
     const d1 = domain[domain.length - 1];
     let t = d1 === d0 ? 0.5 : (x - d0) / (d1 - d0);
@@ -470,6 +472,7 @@ function scalePitch() {
       return interpolate(t).frequency;
     }
 
+    if (isMissing(x)) return unknownValue;
     const d0 = domain[0];
     const d1 = domain[domain.length - 1];
     let t = d1 === d0 ? 0.5 : (x - d0) / (d1 - d0);
@@ -484,6 +487,7 @@ function scalePitch() {
       return interpolate(t).midi;
     }
 
+    if (isMissing(x)) return unknownValue;
     const d0 = domain[0];
     const d1 = domain[domain.length - 1];
     let t = d1 === d0 ? 0.5 : (x - d0) / (d1 - d0);
@@ -536,9 +540,16 @@ function scalePitch() {
     return scale;
   };
 
+  scale.unknown = function(_) {
+    if (!arguments.length) return unknownValue;
+    unknownValue = _;
+    return scale;
+  };
+
   scale.gain = function(x) {
     if (!isEqualLoudness) return 1.0;
     const freq = scale.frequency(x);
+    if (!isCategorical && isMissing(x)) return unknownValue;
     return equalLoudnessCompensation(freq);
   };
 
@@ -573,7 +584,8 @@ function scalePitch() {
       .root(rootNote)
       .quantize(isQuantized)
       .clamp(isClamped)
-      .equalLoudness(isEqualLoudness);
+      .equalLoudness(isEqualLoudness)
+      .unknown(unknownValue);
   };
 
   updateCache();
@@ -594,6 +606,7 @@ function scaleGain() {
   let isClamped = true;
   let isCategorical = false;
   let isEqualLoudness = false;
+  let unknownValue = undefined;
 
   function curveTransform(t) {
     if (isClamped) {
@@ -621,6 +634,7 @@ function scaleGain() {
       if (idx === -1) return range[0];
       t = domain.length > 1 ? idx / (domain.length - 1) : 0.5;
     } else {
+      if (isMissing(x)) return unknownValue;
       const d0 = domain[0];
       const d1 = domain[domain.length - 1];
       t = d1 === d0 ? 0.5 : (x - d0) / (d1 - d0);
@@ -640,6 +654,7 @@ function scaleGain() {
   }
 
   scale.db = function(x, noteOrFreq) {
+    if (!isCategorical && isMissing(x)) return unknownValue;
     const gain = scale(x, noteOrFreq);
     if (gain <= 0.0001) return -60;
     return +(20 * Math.log10(gain)).toFixed(2);
@@ -682,6 +697,12 @@ function scaleGain() {
     return scale;
   };
 
+  scale.unknown = function(_) {
+    if (!arguments.length) return unknownValue;
+    unknownValue = _;
+    return scale;
+  };
+
   scale.compensate = function(baseGain, noteOrFreq) {
     const mult = equalLoudnessCompensation(noteOrFreq);
     return +(baseGain * mult).toFixed(4);
@@ -694,7 +715,8 @@ function scaleGain() {
       .curve(curveType)
       .exponent(exponentValue)
       .clamp(isClamped)
-      .equalLoudness(isEqualLoudness);
+      .equalLoudness(isEqualLoudness)
+      .unknown(unknownValue);
   };
 
   return scale;
@@ -702,6 +724,7 @@ function scaleGain() {
 
 
 // --- src/scales/scaleDuration.js ---
+
 /**
  * Musical rhythmic subdivisions and duration conversions.
  */
@@ -731,6 +754,7 @@ function scaleDuration() {
   let isClamped = true;
   let bpm = 120;
   let isCategorical = false;
+  let unknownValue = undefined;
 
   function notationToBeats(not) {
     if (typeof not === 'number') return not;
@@ -768,6 +792,7 @@ function scaleDuration() {
       if (idx === -1) return rangeNotation[0];
       t = domain.length > 1 ? idx / (domain.length - 1) : 0.5;
     } else {
+      if (isMissing(x)) return unknownValue;
       const d0 = domain[0];
       const d1 = domain[domain.length - 1];
       t = d1 === d0 ? 0.5 : (x - d0) / (d1 - d0);
@@ -791,6 +816,7 @@ function scaleDuration() {
   }
 
   scale.seconds = function(x) {
+    if (!isCategorical && isMissing(x)) return unknownValue;
     const val = scale(x);
     if (typeof val === 'number') return val;
     const beats = notationToBeats(val);
@@ -822,6 +848,12 @@ function scaleDuration() {
     return scale;
   };
 
+  scale.unknown = function(_) {
+    if (!arguments.length) return unknownValue;
+    unknownValue = _;
+    return scale;
+  };
+
   scale.clamp = function(_) {
     if (!arguments.length) return isClamped;
     isClamped = !!_;
@@ -834,7 +866,8 @@ function scaleDuration() {
       .range(rangeNotation.slice())
       .quantize(isQuantized)
       .bpm(bpm)
-      .clamp(isClamped);
+      .clamp(isClamped)
+      .unknown(unknownValue);
   };
 
   return scale;
@@ -842,6 +875,7 @@ function scaleDuration() {
 
 
 // --- src/scales/scalePan.js ---
+
 /**
  * Creates a D3-like spatial / stereo panning scale that maps data to stereo pan values [-1.0 (L), +1.0 (R)].
  */
@@ -850,6 +884,7 @@ function scalePan() {
   let range = [-1, 1]; // -1 = Left, 0 = Center, +1 = Right
   let isClamped = true;
   let isCategorical = false;
+  let unknownValue = undefined;
 
   function scale(x) {
     let t;
@@ -858,6 +893,7 @@ function scalePan() {
       if (idx === -1) return 0;
       t = domain.length > 1 ? idx / (domain.length - 1) : 0.5;
     } else {
+      if (isMissing(x)) return unknownValue;
       const d0 = domain[0];
       const d1 = domain[domain.length - 1];
       t = d1 === d0 ? 0.5 : (x - d0) / (d1 - d0);
@@ -885,6 +921,12 @@ function scalePan() {
     return scale;
   };
 
+  scale.unknown = function(_) {
+    if (!arguments.length) return unknownValue;
+    unknownValue = _;
+    return scale;
+  };
+
   scale.clamp = function(_) {
     if (!arguments.length) return isClamped;
     isClamped = !!_;
@@ -895,7 +937,8 @@ function scalePan() {
     return scalePan()
       .domain(domain.slice())
       .range(range.slice())
-      .clamp(isClamped);
+      .clamp(isClamped)
+      .unknown(unknownValue);
   };
 
   return scale;
@@ -903,6 +946,7 @@ function scalePan() {
 
 
 // --- src/scales/scaleFilter.js ---
+
 /**
  * Creates a D3-like audio filter scale that maps data to cutoff frequencies (Hz), Q resonance, and synth timbre parameters.
  */
@@ -913,6 +957,7 @@ function scaleFilter() {
   let scaleType = "logarithmic"; // "logarithmic", "exponential", "linear"
   let isClamped = true;
   let isCategorical = false;
+  let unknownValue = undefined;
 
   function transformT(t) {
     if (isClamped) {
@@ -936,6 +981,7 @@ function scaleFilter() {
       if (idx === -1) return frequencyRange[0];
       t = domain.length > 1 ? idx / (domain.length - 1) : 0.5;
     } else {
+      if (isMissing(x)) return unknownValue;
       const d0 = domain[0];
       const d1 = domain[domain.length - 1];
       t = d1 === d0 ? 0.5 : (x - d0) / (d1 - d0);
@@ -961,6 +1007,7 @@ function scaleFilter() {
       if (idx === -1) return qRange[0];
       t = domain.length > 1 ? idx / (domain.length - 1) : 0.5;
     } else {
+      if (isMissing(x)) return unknownValue;
       const d0 = domain[0];
       const d1 = domain[domain.length - 1];
       t = d1 === d0 ? 0.5 : (x - d0) / (d1 - d0);
@@ -994,6 +1041,12 @@ function scaleFilter() {
     return scale;
   };
 
+  scale.unknown = function(_) {
+    if (!arguments.length) return unknownValue;
+    unknownValue = _;
+    return scale;
+  };
+
   scale.clamp = function(_) {
     if (!arguments.length) return isClamped;
     isClamped = !!_;
@@ -1006,7 +1059,8 @@ function scaleFilter() {
       .range(frequencyRange.slice())
       .qRange(qRange.slice())
       .type(scaleType)
-      .clamp(isClamped);
+      .clamp(isClamped)
+      .unknown(unknownValue);
   };
 
   return scale;
@@ -1078,6 +1132,7 @@ function scaleSample() {
 
 
 // --- src/scales/scaleTempo.js ---
+
 /**
  * Creates a D3-like tempo scale that maps continuous data to playback tempo in BPM.
  */
@@ -1085,8 +1140,10 @@ function scaleTempo() {
   let domain = [0, 1];
   let range = [60, 180]; // BPM
   let isClamped = true;
+  let unknownValue = undefined;
 
   function scale(x) {
+    if (isMissing(x)) return unknownValue;
     const d0 = domain[0];
     const d1 = domain[domain.length - 1];
     let t = d1 === d0 ? 0.5 : (x - d0) / (d1 - d0);
@@ -1108,6 +1165,12 @@ function scaleTempo() {
     return scale;
   };
 
+  scale.unknown = function(_) {
+    if (!arguments.length) return unknownValue;
+    unknownValue = _;
+    return scale;
+  };
+
   scale.clamp = function(_) {
     if (!arguments.length) return isClamped;
     isClamped = !!_;
@@ -1118,7 +1181,8 @@ function scaleTempo() {
     return scaleTempo()
       .domain(domain.slice())
       .range(range.slice())
-      .clamp(isClamped);
+      .clamp(isClamped)
+      .unknown(unknownValue);
   };
 
   return scale;
@@ -1145,6 +1209,7 @@ function scaleTension() {
   let filterRange = [400, 8000]; // Hz
   let tempoRange = [1.0, 1.8]; // speed multiplier
   let gainRange = [0.4, 1.0];
+  let unknownValue = undefined;
 
   // Harmonic chord progressions from pure consonance -> moderate tension -> maximum dissonance
   const chordTiers = {
@@ -1158,8 +1223,15 @@ function scaleTension() {
   const filterEngine = scaleFilter().domain([0, 1]).range(filterRange);
   const gainEngine = scaleGain().domain([0, 1]).range(gainRange);
 
+  // Returns the clamped [0, 1] position of val in the domain, or null when val is missing.
+  function normalize(val) {
+    if (isMissing(val)) return null;
+    return Math.max(0, Math.min(1, (val - domain[0]) / (domain[1] - domain[0])));
+  }
+
   function tension(val) {
-    const norm = Math.max(0, Math.min(1, (val - domain[0]) / (domain[1] - domain[0])));
+    const norm = normalize(val);
+    if (norm === null) return unknownValue;
     return {
       normalized: norm,
       energy: norm,
@@ -1175,7 +1247,8 @@ function scaleTension() {
   }
 
   tension.chord = function(val) {
-    const norm = Math.max(0, Math.min(1, (val - domain[0]) / (domain[1] - domain[0])));
+    const norm = normalize(val);
+    if (norm === null) return unknownValue;
     if (norm < 0.3) return chordTiers.consonant;
     if (norm < 0.6) return chordTiers.moderate;
     if (norm < 0.85) return chordTiers.tense;
@@ -1183,33 +1256,44 @@ function scaleTension() {
   };
 
   tension.pitch = function(val) {
-    const norm = Math.max(0, Math.min(1, (val - domain[0]) / (domain[1] - domain[0])));
+    const norm = normalize(val);
+    if (norm === null) return unknownValue;
     return pitchEngine(norm);
   };
 
   tension.filter = function(val) {
-    const norm = Math.max(0, Math.min(1, (val - domain[0]) / (domain[1] - domain[0])));
+    const norm = normalize(val);
+    if (norm === null) return unknownValue;
     return filterEngine(norm);
   };
 
   tension.gain = function(val) {
-    const norm = Math.max(0, Math.min(1, (val - domain[0]) / (domain[1] - domain[0])));
+    const norm = normalize(val);
+    if (norm === null) return unknownValue;
     return gainEngine(norm);
   };
 
   tension.detune = function(val) {
-    const norm = Math.max(0, Math.min(1, (val - domain[0]) / (domain[1] - domain[0])));
+    const norm = normalize(val);
+    if (norm === null) return unknownValue;
     return detuneRange[0] + norm * (detuneRange[1] - detuneRange[0]);
   };
 
   tension.tempo = function(val) {
-    const norm = Math.max(0, Math.min(1, (val - domain[0]) / (domain[1] - domain[0])));
+    const norm = normalize(val);
+    if (norm === null) return unknownValue;
     return +(tempoRange[0] + norm * (tempoRange[1] - tempoRange[0])).toFixed(2);
   };
 
   tension.domain = function(_) {
     if (!arguments.length) return domain;
     domain = [_[0], _[1]];
+    return tension;
+  };
+
+  tension.unknown = function(_) {
+    if (!arguments.length) return unknownValue;
+    unknownValue = _;
     return tension;
   };
 
@@ -1252,7 +1336,8 @@ function scaleTension() {
       .detuneRange(detuneRange)
       .filterRange(filterRange)
       .tempoRange(tempoRange)
-      .gainRange(gainRange);
+      .gainRange(gainRange)
+      .unknown(unknownValue);
   };
 
   return tension;
@@ -3845,7 +3930,7 @@ class Track {
     // Accessors
     this.timeAccessor = (d, i) => i * 0.25; // default 16th or quarter notes
     this.pitchAccessor = d => d.pitch || d.note || "C4";
-    this.gainAccessor = d => d.gain || d.velocity || d.volume || 0.8;
+    this.gainAccessor = d => d.gain ?? d.velocity ?? d.volume ?? 0.8;
     this.durationAccessor = d => d.duration || "8n";
     this.panAccessor = d => d.pan !== undefined ? d.pan : 0;
     this.filterAccessor = d => d.filter !== undefined ? d.filter : undefined;

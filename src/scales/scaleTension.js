@@ -1,6 +1,7 @@
 import { scalePitch } from './scalePitch.js';
 import { scaleFilter } from './scaleFilter.js';
 import { scaleGain } from './scaleGain.js';
+import { isMissing } from './unknown.js';
 
 /**
  * scaleTension: Maps continuous anomaly, risk, volatility, or pressure metrics
@@ -20,6 +21,7 @@ export function scaleTension() {
   let filterRange = [400, 8000]; // Hz
   let tempoRange = [1.0, 1.8]; // speed multiplier
   let gainRange = [0.4, 1.0];
+  let unknownValue = undefined;
 
   // Harmonic chord progressions from pure consonance -> moderate tension -> maximum dissonance
   const chordTiers = {
@@ -33,8 +35,15 @@ export function scaleTension() {
   const filterEngine = scaleFilter().domain([0, 1]).range(filterRange);
   const gainEngine = scaleGain().domain([0, 1]).range(gainRange);
 
+  // Returns the clamped [0, 1] position of val in the domain, or null when val is missing.
+  function normalize(val) {
+    if (isMissing(val)) return null;
+    return Math.max(0, Math.min(1, (val - domain[0]) / (domain[1] - domain[0])));
+  }
+
   function tension(val) {
-    const norm = Math.max(0, Math.min(1, (val - domain[0]) / (domain[1] - domain[0])));
+    const norm = normalize(val);
+    if (norm === null) return unknownValue;
     return {
       normalized: norm,
       energy: norm,
@@ -50,7 +59,8 @@ export function scaleTension() {
   }
 
   tension.chord = function(val) {
-    const norm = Math.max(0, Math.min(1, (val - domain[0]) / (domain[1] - domain[0])));
+    const norm = normalize(val);
+    if (norm === null) return unknownValue;
     if (norm < 0.3) return chordTiers.consonant;
     if (norm < 0.6) return chordTiers.moderate;
     if (norm < 0.85) return chordTiers.tense;
@@ -58,33 +68,44 @@ export function scaleTension() {
   };
 
   tension.pitch = function(val) {
-    const norm = Math.max(0, Math.min(1, (val - domain[0]) / (domain[1] - domain[0])));
+    const norm = normalize(val);
+    if (norm === null) return unknownValue;
     return pitchEngine(norm);
   };
 
   tension.filter = function(val) {
-    const norm = Math.max(0, Math.min(1, (val - domain[0]) / (domain[1] - domain[0])));
+    const norm = normalize(val);
+    if (norm === null) return unknownValue;
     return filterEngine(norm);
   };
 
   tension.gain = function(val) {
-    const norm = Math.max(0, Math.min(1, (val - domain[0]) / (domain[1] - domain[0])));
+    const norm = normalize(val);
+    if (norm === null) return unknownValue;
     return gainEngine(norm);
   };
 
   tension.detune = function(val) {
-    const norm = Math.max(0, Math.min(1, (val - domain[0]) / (domain[1] - domain[0])));
+    const norm = normalize(val);
+    if (norm === null) return unknownValue;
     return detuneRange[0] + norm * (detuneRange[1] - detuneRange[0]);
   };
 
   tension.tempo = function(val) {
-    const norm = Math.max(0, Math.min(1, (val - domain[0]) / (domain[1] - domain[0])));
+    const norm = normalize(val);
+    if (norm === null) return unknownValue;
     return +(tempoRange[0] + norm * (tempoRange[1] - tempoRange[0])).toFixed(2);
   };
 
   tension.domain = function(_) {
     if (!arguments.length) return domain;
     domain = [_[0], _[1]];
+    return tension;
+  };
+
+  tension.unknown = function(_) {
+    if (!arguments.length) return unknownValue;
+    unknownValue = _;
     return tension;
   };
 
@@ -127,7 +148,8 @@ export function scaleTension() {
       .detuneRange(detuneRange)
       .filterRange(filterRange)
       .tempoRange(tempoRange)
-      .gainRange(gainRange);
+      .gainRange(gainRange)
+      .unknown(unknownValue);
   };
 
   return tension;
