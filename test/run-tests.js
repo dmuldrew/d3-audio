@@ -10,6 +10,7 @@ import { testChoreography } from './test-choreography.js';
 import { testTimelinePlayback } from './test-timeline-playback.js';
 import { testUnknown } from './test-unknown.js';
 import { testBundle } from './test-bundle.js';
+import { testCopy } from './test-copy.js';
 
 let passed = 0;
 let failed = 0;
@@ -54,41 +55,44 @@ async function runAll() {
   console.log('       d3-audio Unit Test Suite         ');
   console.log('========================================\n');
 
-  console.log('\x1b[36m[1/12] Testing Musical Theory & Conversions...\x1b[0m');
+  console.log('\x1b[36m[1/13] Testing Musical Theory & Conversions...\x1b[0m');
   testMusical();
 
-  console.log('\n\x1b[36m[2/12] Testing D3-like Audio Scalers...\x1b[0m');
+  console.log('\n\x1b[36m[2/13] Testing D3-like Audio Scalers...\x1b[0m');
   testScales();
 
-  console.log('\n\x1b[36m[3/12] Testing Rhythmic Movements & Envelopes...\x1b[0m');
+  console.log('\n\x1b[36m[3/13] Testing Rhythmic Movements & Envelopes...\x1b[0m');
   testMovements();
 
-  console.log('\n\x1b[36m[4/12] Testing Timeline & Track Orchestration...\x1b[0m');
+  console.log('\n\x1b[36m[4/13] Testing Timeline & Track Orchestration...\x1b[0m');
   testTimeline();
 
-  console.log('\n\x1b[36m[5/12] Testing Advanced Scalers, Theory & a11y...\x1b[0m');
+  console.log('\n\x1b[36m[5/13] Testing Advanced Scalers, Theory & a11y...\x1b[0m');
   testAdvanced();
 
-  console.log('\n\x1b[36m[6/12] Testing Audio Engine, Synths & Granular Scrubber...\x1b[0m');
+  console.log('\n\x1b[36m[6/13] Testing Audio Engine, Synths & Granular Scrubber...\x1b[0m');
   testAudio();
 
-  console.log('\n\x1b[36m[7/12] Testing UI Components & Accessible Chart Bridge...\x1b[0m');
+  console.log('\n\x1b[36m[7/13] Testing UI Components & Accessible Chart Bridge...\x1b[0m');
   testUI();
 
-  console.log('\n\x1b[36m[8/12] Testing Boundary Conditions & Robustness...\x1b[0m');
+  console.log('\n\x1b[36m[8/13] Testing Boundary Conditions & Robustness...\x1b[0m');
   testEdgeCases();
 
-  console.log('\n\x1b[36m[9/12] Testing Choreography Presets & D3 Transitions...\x1b[0m');
+  console.log('\n\x1b[36m[9/13] Testing Choreography Presets & D3 Transitions...\x1b[0m');
   testChoreography();
 
-  console.log('\n\x1b[36m[10/12] Testing Timeline Playback & Transport Lifecycle...\x1b[0m');
+  console.log('\n\x1b[36m[10/13] Testing Timeline Playback & Transport Lifecycle...\x1b[0m');
   await testTimelinePlayback();
 
-  console.log('\n\x1b[36m[11/12] Testing Missing-Data Handling via scale.unknown()...\x1b[0m');
+  console.log('\n\x1b[36m[11/13] Testing Missing-Data Handling via scale.unknown()...\x1b[0m');
   testUnknown();
 
-  console.log('\n\x1b[36m[12/12] Testing Built Browser Bundles...\x1b[0m');
+  console.log('\n\x1b[36m[12/13] Testing Built Browser Bundles...\x1b[0m');
   testBundle();
+
+  console.log('\n\x1b[36m[13/13] Testing scale.copy() Across All Scales...\x1b[0m');
+  testCopy();
 
   console.log('\n----------------------------------------');
   if (failed === 0) {

@@ -86,6 +86,13 @@ export function testAdvanced() {
   const cSus4 = cScaler({ root: "D3", quality: "sus4" });
   assertEqual(cSus4.notes, ["D3", "G3", "A3"], "scaleChord({ root: 'D3', quality: 'sus4' }) gives D3-G3-A3");
 
+  // Object input overrides voicing/inversion for that call only
+  const overridden = cScaler({ root: "C3", inversion: 1, voicing: "open" });
+  assert(overridden.notes[0] !== "C3", "scaleChord object input applies its inversion to that call");
+  assertEqual(cScaler.inversion(), 0, "scaleChord object input does not change the configured inversion");
+  assertEqual(cScaler.voicing(), "close", "scaleChord object input does not change the configured voicing");
+  assertEqual(cScaler("C3").notes, ["C3", "E3", "G3"], "scaleChord call after an override uses the configured voicing again");
+
   // 6. Non-Western Scales & Microtonality
   assert(Boolean(SCALE_INTERVALS.maqamBayati), "SCALE_INTERVALS.maqamBayati exists");
   assertEqual(SCALE_INTERVALS.maqamBayati[1], 1.5, "Maqam Bayati 2nd degree is quarter-tone (1.5 semitones)");

@@ -32,7 +32,7 @@ const dataset = [
 const uncScale = scaleUncertainty().domain([0, 1]).range([16, 2]);
 const spatScale = scaleSpatial().domain([0, 1000]).range([0.05, 0.92]).decay([0.4, 6.5]);
 const echoScale = scaleEcho().domain([0, 700]).range([0.06, 0.55]).feedback([0.1, 0.65]);
-const chordScale = scaleChord();
+const chordScale = scaleChord().voicing("open");
 
 // State
 let currentTab = "unified";
@@ -107,7 +107,7 @@ function getChordForRecord(d) {
     quality = "dim7";
     root = "B2";
   }
-  return chordScale({ root, quality, voicing: "open" });
+  return chordScale({ root, quality });
 }
 
 // Update telemetry display without producing sound

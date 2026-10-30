@@ -47,6 +47,14 @@ export function scaleEcho() {
     return arguments.length ? ((clamp = Boolean(c)), scaler) : clamp;
   };
 
+  scaler.copy = function() {
+    return scaleEcho()
+      .domain(domain)
+      .range(delayRange)
+      .feedback(feedbackRange)
+      .clamp(clamp);
+  };
+
   scaler.createNode = function(Tone, val) {
     if (!Tone || !Tone.FeedbackDelay) return null;
     const res = scaler(val);
