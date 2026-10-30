@@ -29,6 +29,9 @@ export function scaleChord() {
   function scaler(input) {
     let currentRoot = rootNote;
     let quality = defaultQuality;
+    // Per-call overrides: object input must not change the scale's configured voicing/inversion
+    let currentInversion = inversion;
+    let currentVoicing = voicing;
 
     if (Array.isArray(input)) {
       if (typeof input[0] === 'string') currentRoot = input[0];
@@ -36,8 +39,8 @@ export function scaleChord() {
     } else if (typeof input === 'object' && input !== null) {
       if (input.root) currentRoot = input.root;
       if (input.quality && CHORD_FORMULAS[input.quality]) quality = input.quality;
-      if (input.inversion !== undefined) inversion = input.inversion;
-      if (input.voicing) voicing = input.voicing;
+      if (input.inversion !== undefined) currentInversion = input.inversion;
+      if (input.voicing) currentVoicing = input.voicing;
     } else if (typeof input === 'string') {
       if (CHORD_FORMULAS[input]) quality = input;
       else currentRoot = input;
@@ -50,19 +53,19 @@ export function scaleChord() {
     let chordMidis = intervals.map(semitones => rootMidi + semitones);
 
     // Apply inversion
-    if (inversion > 0 && chordMidis.length > 1) {
-      for (let i = 0; i < (inversion % chordMidis.length); i++) {
+    if (currentInversion > 0 && chordMidis.length > 1) {
+      for (let i = 0; i < (currentInversion % chordMidis.length); i++) {
         chordMidis[i] += 12;
       }
       chordMidis.sort((a, b) => a - b);
     }
 
     // Apply open voicing / drop 2
-    if (voicing === "open" && chordMidis.length >= 3) {
+    if (currentVoicing === "open" && chordMidis.length >= 3) {
       // drop 2nd note down an octave or raise 3rd note up an octave
       chordMidis[1] += 12;
       chordMidis.sort((a, b) => a - b);
-    } else if (voicing === "drop2" && chordMidis.length >= 4) {
+    } else if (currentVoicing === "drop2" && chordMidis.length >= 4) {
       // drop 2nd highest note down an octave
       const idx = chordMidis.length - 2;
       chordMidis[idx] -= 12;
