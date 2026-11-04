@@ -18,6 +18,49 @@ export const PRESETS = {
   squash
 };
 
+// For each element, the inline value every style property had before the
+// movements currently writing it began, plus how many of them are writing it.
+// A property is restored when its last writer ends, so overlapping movements
+// never restore another movement's mid-animation frame, and a short movement's
+// properties come back on time even while a longer one keeps running.
+const restingStyles = new WeakMap();
+
+// Writes an inline style on behalf of one movement, which tracks the
+// properties it has claimed in `claims`.
+function writeStyle(el, claims, prop, value) {
+  if (!claims.has(prop)) {
+    let props = restingStyles.get(el);
+    if (!props) {
+      props = new Map();
+      restingStyles.set(el, props);
+    }
+    let resting = props.get(prop);
+    if (!resting) {
+      resting = { writers: 0, value: el.style[prop] || '' };
+      props.set(prop, resting);
+    }
+    resting.writers++;
+    claims.add(prop);
+  }
+  el.style[prop] = value;
+}
+
+// Releases a movement's claims, restoring each property it was the last writer of.
+function releaseStyles(el, claims) {
+  const props = restingStyles.get(el);
+  if (!props) return;
+  for (const prop of claims) {
+    const resting = props.get(prop);
+    resting.writers--;
+    if (resting.writers === 0) {
+      el.style[prop] = resting.value;
+      props.delete(prop);
+    }
+  }
+  claims.clear();
+  if (props.size === 0) restingStyles.delete(el);
+}
+
 /**
  * Creates a D3 choreography animator that applies rhythmic physical movements to DOM/SVG elements.
  * 
@@ -70,14 +113,14 @@ export function choreography() {
       ...extraOpts
     };
 
+    const claims = new Set();
+
     // Ensure transform origin is set for SVG/DOM elements
     const isSvg = typeof SVGElement !== 'undefined' && el instanceof SVGElement;
     if (isSvg) {
-      el.style.transformBox = 'fill-box';
-      el.style.transformOrigin = extraOpts.origin || 'center';
-    } else {
-      el.style.transformOrigin = extraOpts.origin || 'center';
+      writeStyle(el, claims, 'transformBox', 'fill-box');
     }
+    writeStyle(el, claims, 'transformOrigin', extraOpts.origin || 'center');
 
     const rAF = typeof requestAnimationFrame !== 'undefined'
       ? requestAnimationFrame
@@ -88,12 +131,20 @@ export function choreography() {
 
     let startTime = null;
     let animId = null;
+    let finished = false;
+
+    function finish() {
+      if (finished) return;
+      finished = true;
+      releaseStyles(el, claims);
+    }
 
     if (onStartCallback) {
       onStartCallback(el, datum, index);
     }
 
     function step(timestamp) {
+      if (finished) return;
       if (!startTime) startTime = timestamp;
       const elapsed = timestamp - startTime;
       const t = Math.min(1.0, elapsed / durationMs);
@@ -102,32 +153,29 @@ export function choreography() {
 
       // Apply transform & styling
       if (frameResult.transform !== undefined) {
-        if (frameResult.transform === 'none' || frameResult.transform === '') {
-          el.style.transform = '';
-        } else {
-          el.style.transform = frameResult.transform;
-        }
+        const transform = frameResult.transform === 'none' ? '' : frameResult.transform;
+        writeStyle(el, claims, 'transform', transform);
       }
 
       if (frameResult.filter !== undefined) {
-        el.style.filter = frameResult.filter;
+        writeStyle(el, claims, 'filter', frameResult.filter);
       }
 
       if (frameResult.opacity !== undefined && movementType === 'ripple') {
-        el.style.opacity = frameResult.opacity;
+        writeStyle(el, claims, 'opacity', frameResult.opacity);
       }
 
       if (onProgressCallback) {
         onProgressCallback(t, frameResult, el, datum);
+        // The callback may have cancelled the movement
+        if (finished) return;
       }
 
       if (t < 1.0) {
         animId = rAF(step);
       } else {
-        // Reset to rest state
-        el.style.transform = '';
-        if (frameResult.filter !== undefined) el.style.filter = '';
-        if (movementType === 'ripple') el.style.opacity = '';
+        // Return the element to the inline styles it had before moving
+        finish();
 
         if (onEndCallback) {
           onEndCallback(el, datum, index);
@@ -140,8 +188,7 @@ export function choreography() {
     return {
       cancel: () => {
         if (animId) cAF(animId);
-        el.style.transform = '';
-        el.style.filter = '';
+        finish();
       }
     };
   }
